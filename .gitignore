@@ -1,0 +1,9 @@
+/.direnv/
+/.tmontmp/
+**/__pycache__/
+**/node_modules/
+
+*.swp
+.DS_Store
+.testmondata
+.coverage

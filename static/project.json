@@ -1,0 +1,18 @@
+{
+  "name": "static",
+  "description": "scripts for static.scdc.co",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::642029907872:role/apex_lambda_function",
+  "profile": "riverleo",
+  "environment": {
+    "SECRET": "ADkxEUzydm8vmVMfMKDeFYDcXqmiFisBhYQY8yd4x9njWCmWtm",
+    "MySQL_HOST": "13.124.240.196",
+    "MySQL_DATABASE": "zeitstories",
+    "MySQL_USER": "root",
+    "MySQL_PASSWORD": "cAbFj&mbjWC7mv%zeshkrTaj.nv[FX@ZTLTT7j2zAv6GMJ#UPF",
+    "REGION": "ap-northeast-2",
+    "ACCESS_KEY_ID": "AKIAJIDXABBBXI3KJVSQ",
+    "SECRET_ACCESS_KEY": "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"
+  }
+}

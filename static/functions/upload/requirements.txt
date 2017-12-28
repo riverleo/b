@@ -1,0 +1,4 @@
+orator
+PyMySQL
+PyJWT
+boto3

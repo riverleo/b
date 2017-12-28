@@ -1,0 +1,9 @@
+{
+  "name": "v1_prod",
+  "description": "v1 (prod) lambda function base on apex",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::642029907872:role/apex_lambda_function",
+  "profile": "riverleo",
+  "environment": {}
+}

@@ -1,0 +1,8 @@
+{
+  "memory": 128,
+  "timeout": 5,
+  "runtime": "nodejs6.10",
+  "handler": "index.handle",
+  "description": "Example with javascript dependency on an external package",
+  "hooks": {}
+}

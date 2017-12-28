@@ -1,0 +1,4 @@
+orator
+PyMySQL
+PyJWT
+validate_email
