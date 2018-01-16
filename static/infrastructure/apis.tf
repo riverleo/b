@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "API" {
   name        = "Static"
-  description = "static.scdc.co"
+  description = "static.wslo.co"
   binary_media_types = [
     "*/*",
     "image/*",

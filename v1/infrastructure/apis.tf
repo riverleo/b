@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "API" {
   name        = "V1 (DEV)"
-  description = "scdc api for development"
+  description = "api for development"
 }
 
 // Deployment
@@ -21,12 +21,12 @@ resource "aws_api_gateway_deployment" "API_Deployment" {
 }
 
 resource "aws_api_gateway_api_key" "API_Key" {
-  name         = "InApp"
+  name         = "workslow"
   description  = "API Key for internal applications (non-customer)"
 }
 
 resource "aws_api_gateway_usage_plan" "API_UsagePlan" {
-  name         = "InApp"
+  name         = "workslow"
   description  = "Usage plan for internal applications (non-customer)"
 
   api_stages {

@@ -1,0 +1,5 @@
+access_key = "AKIAIN3HLHS26Z4CLVUA"
+secret_key = "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"
+region = "ap-northeast-2"
+account_id = "642029907872"
+role_arn = "arn:aws:iam::642029907872:role/apex_lambda_function"

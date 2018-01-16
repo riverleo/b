@@ -7,7 +7,7 @@
   "profile": "riverleo",
   "environment": {
     "SECRET": "ADkxEUzydm8vmVMfMKDeFYDcXqmiFisBhYQY8yd4x9njWCmWtm",
-    "MySQL_HOST": "13.124.240.196",
+    "MySQL_HOST": "13.125.125.132",
     "MySQL_DATABASE": "zeitstories",
     "MySQL_USER": "root",
     "MySQL_PASSWORD": "cAbFj&mbjWC7mv%zeshkrTaj.nv[FX@ZTLTT7j2zAv6GMJ#UPF"

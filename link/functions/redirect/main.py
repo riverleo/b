@@ -29,7 +29,7 @@ def handle(e, context):
 
     link = (
         db.table('link')
-        .where('key', path_params['key'])
+        .where('key', path_params.get('key'))
         .first()
     )
 
@@ -37,6 +37,6 @@ def handle(e, context):
         'statusCode': status_code,
         'body': None,
         'headers': {
-            'Location': link['href'] if link else 'https://www.wearescdc.com',
+            'Location': link['href'] if link else 'https://www.workslow.co',
         },
     }
