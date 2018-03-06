@@ -1,3 +1,0 @@
-orator
-PyMySQL
-PyJWT

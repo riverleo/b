@@ -1,9 +1,5 @@
-/.cache/
-/.direnv/
-/.tmontmp/
-**/__pycache__/
+# Serverless directories
+.serverless
 
-*.swp
-.DS_Store
-.testmondata
-.coverage
+# golang output binary directory
+bin

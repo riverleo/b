@@ -1,0 +1,50 @@
+service:
+  name: styles-api
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: nodejs6.10
+  profile: workslow
+
+functions:
+  get:
+    handler: get.default
+    events:
+      - http:
+          method: get
+          path: styles
+          cors: true
+  post:
+    handler: post.default
+    events:
+      - http:
+          method: post
+          path: styles
+          cors: true
+  put:
+    handler: put.default
+    events:
+      - http:
+          method: put
+          path: styles/{id}
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  delete:
+    handler: delete.default
+    events:
+      - http:
+          method: delete
+          path: styles/{id}
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true

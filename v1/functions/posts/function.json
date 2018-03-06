@@ -1,8 +1,0 @@
-{
-  "memory": 128,
-  "timeout": 5,
-  "runtime": "python3.6",
-  "handler": "main.handle",
-  "description": "Example with javascript dependency on an external package",
-  "hooks": {}
-}
