@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Serverless webpack example using ecma script",
   "scripts": {
+    "lint": "esw --color",
+    "lint:watch": "esw --watch --color",
     "test": "jest",
     "test:watch": "npm run test -- --watch"
   },
@@ -19,6 +21,14 @@
     "babel-polyfill": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-stage-0": "^6.24.1",
+    "eslint": "^4.18.2",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.9.0",
+    "eslint-plugin-jest": "^21.13.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
+    "eslint-watch": "^3.1.3",
     "jest": "^22.4.2",
     "serverless-webpack": "^3.1.1",
     "webpack": "^3.3.0"

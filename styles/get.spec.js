@@ -1,14 +1,13 @@
 import _ from 'lodash';
-import mysql from 'promise-mysql';
 import { insert } from 'sql-bricks';
 import get from './get';
-import db from './db.json';
+import getConnection from './lib/getConnection';
 
 describe('get.js', () => {
   let conn;
 
   beforeEach(async () => {
-    conn = await mysql.createConnection(db.test);
+    conn = await getConnection();
   });
 
   afterEach(async () => {
@@ -44,7 +43,7 @@ describe('get.js', () => {
       _.forEach(data, style => expect(style).toHaveProperty('active', true));
     };
 
-    return get({ queryStringParameters: { 'active': 'true' } }, null, callback);
+    return get({ queryStringParameters: { active: 'true' } }, null, callback);
   });
 
   it('비활성화된 스타일시트들만 불러올 때', async () => {
@@ -61,7 +60,7 @@ describe('get.js', () => {
       _.forEach(data, style => expect(style).toHaveProperty('active', false));
     };
 
-    return get({ queryStringParameters: { 'active': 'false' } }, null, callback);
+    return get({ queryStringParameters: { active: 'false' } }, null, callback);
   });
 
   it('특정 컴포넌트의 스타일시트들만 불러올 때', async () => {

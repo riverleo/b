@@ -1,37 +1,40 @@
 import _ from 'lodash';
-import mysql from 'promise-mysql';
 import { select } from 'sql-bricks';
-import db from './db.json';
+import parse, { parseSQLError } from './lib/parse';
+import { TABLE, COLUMNS } from './lib/constants';
+import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   let data = [];
-  const conn = await mysql.createConnection(db[process.env.NODE_ENV || 'prod']);
+  let sql = select().from(TABLE).orderBy(`${COLUMNS.CREATED_AT} DESC`);
+  const conn = await getConnection();
+  const params = _.get(e, 'queryStringParameters') || {};
+
+  if (!_.isNil(params.active)) {
+    sql = sql.where(COLUMNS.ACTIVE, _.toLower(params.active) === 'true');
+  }
+
+  if (!_.isNil(params.component)) {
+    sql = sql.where(COLUMNS.COMPONENT, params.component);
+  }
+
+  let response;
 
   try {
-    const params = _.get(e, 'queryStringParameters') || {};
-    let query = select().from('style').orderBy('createdAt DESC');
+    data = _.map(await conn.query(sql.toString()), style => parse(style, true));
 
-    if (!_.isNil(params.active)) {
-      query = query.where('active', _.toLower(params.active) === 'true' ? true : false);
-    }
-
-    if (!_.isNil(params.component)) {
-      query = query.where('component', params.component);
-    }
-
-    data = await conn.query(query.toString());
-
-    _.forEach(data, (style) => { style.active = !!style.active; });
-  }
-  catch (e) {
-    throw e;
-  }
-  finally {
+    response = {
+      statusCode: 200,
+      body: JSON.stringify({ data }),
+    };
+  } catch (error) {
+    response = {
+      statusCode: 400,
+      body: JSON.stringify({ error: parseSQLError(error) }),
+    };
+  } finally {
     conn.end();
   }
 
-  callback(null, {
-    statusCode: 200,
-    body: JSON.stringify({ data }),
-  });
+  callback(null, response);
 };
