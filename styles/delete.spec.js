@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { select, insert } from 'sql-bricks';
 import del from './delete';
 import parse from './lib/parse';
