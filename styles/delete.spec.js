@@ -9,6 +9,7 @@ describe('delete.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
+    await conn.query('TRUNCATE style');
     const { insertId } = await conn.query(insert('style', { component: 'anonymous' }).toString());
     const raw = await conn.query(select().from('style').where({ id: insertId }).toString());
     origin = parse(raw[0]);

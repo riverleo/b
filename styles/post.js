@@ -11,19 +11,22 @@ export default async (e, context, callback) => {
   const conn = await getConnection();
 
   let response;
+  const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
     const { insertId } = await conn.query(sql.toString());
     const data = await conn.query(select().from(TABLE).where({ id: insertId }).toString());
 
     response = {
-      statusCode: 201,
       body: JSON.stringify({ data: parse(data[0], true) }),
+      headers,
+      statusCode: 201,
     };
   } catch (error) {
     response = {
-      statusCode: 400,
       body: JSON.stringify({ error: parseSQLError(error) }),
+      headers,
+      statusCode: 400,
     };
   } finally {
     conn.end();

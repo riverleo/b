@@ -9,18 +9,21 @@ export default async (e, context, callback) => {
   const conn = await getConnection();
 
   let response;
+  const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
     await conn.query(sql.toString());
 
     response = {
-      statusCode: 204,
       body: JSON.stringify({ data: true }),
+      headers,
+      statusCode: 204,
     };
   } catch (error) {
     response = {
-      statusCode: 400,
       body: JSON.stringify({ error: parseSQLError(error) }),
+      headers,
+      statusCode: 400,
     };
   } finally {
     conn.end();

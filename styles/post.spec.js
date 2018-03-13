@@ -6,6 +6,7 @@ describe('post.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
+    await conn.query('TRUNCATE style');
   });
 
   afterEach(async () => {

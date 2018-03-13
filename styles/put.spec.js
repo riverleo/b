@@ -21,6 +21,7 @@ describe('put.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
+    await conn.query('TRUNCATE style');
     const { insertId } = await conn.query(insert('style', { component: 'anonymous' }).toString());
     const raw = await conn.query(select().from('style').where({ id: insertId }).toString());
     origin = parse(raw[0]);
@@ -31,7 +32,7 @@ describe('put.js', () => {
     conn.end();
   });
 
-  it('모든 필드의 수정을 요청했을 때', async () => {
+  it('모든 필드의 수정을 요청했을 때', () => {
     const expectedBody = randomString(100);
     const expectedActive = true;
     const expectedComponent = randomString(50);
@@ -105,5 +106,30 @@ describe('put.js', () => {
     };
 
     return put({ pathParameters: { id: origin.id }, body }, null, callback);
+  });
+
+  it('특정 스타일을 활성화시켰을 때', async () => {
+    await conn.query(insert('style', { component: 'a', active: true }).toString());
+    await conn.query(insert('style', { component: 'a' }).toString());
+    await conn.query(insert('style', { component: 'a' }).toString());
+    await conn.query(insert('style', { component: 'a' }).toString());
+    await conn.query(insert('style', { component: 'a' }).toString());
+    const { insertId } = await conn.query(insert('style', { component: 'a' }).toString());
+
+    const body = JSON.stringify({
+      active: true,
+    });
+
+    const callback = async (err, result) => {
+      const data = await conn.query(select().from('style').where({ component: 'a', active: true }).toString());
+      const parsed = parse(data[0], true);
+
+      expect(data).toHaveLength(1);
+      expect(parsed).toHaveProperty('id', insertId);
+      expect(parsed).toHaveProperty('active', true);
+      expect(parsed).toHaveProperty('component', 'a');
+    };
+
+    return put({ pathParameters: { id: insertId }, body }, null, callback);
   });
 });
