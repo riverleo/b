@@ -1,15 +1,14 @@
 import _ from 'lodash';
 import { select, update, and, notEq } from 'sql-bricks';
-import style from './lib/table';
+import { TABLE, COLUMNS } from './lib/constants';
 import parse, { parseSQLError } from './lib/parse';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   const { id } = e.pathParameters;
-  const { name, columns } = style;
-  const omitted = _.values(_.omit(columns, ['id', 'createdAt', 'updatedAt']));
-  const picked = _.pick(JSON.parse(e.body), omitted);
-  const sql = update(name, parse(picked)).where({ id });
+  const { COMPONENT, BODY, ACTIVE } = COLUMNS;
+  const picked = _.pick(JSON.parse(e.body), [COMPONENT, BODY, ACTIVE]);
+  const sql = update(TABLE, parse(picked)).where({ id });
   const conn = await getConnection();
 
   let response;
@@ -20,18 +19,16 @@ export default async (e, context, callback) => {
       await conn.query(sql.toString());
     }
 
-    const data = await conn.query(select().from(name).where({ id }).toString());
-    const parsed = parse(data[0], true);
+    const data = await conn.query(select().from(TABLE).where({ id }).toString());
+    const style = parse(data[0], true);
 
     if (picked.active) {
-      const updateSQL = update(name, { active: false })
-        .where(and({ component: parsed.component }, notEq('id', id)));
-
-      await conn.query(updateSQL.toString());
+      const sql = update(TABLE, { active: false }).where(and({ component: style.component }, notEq('id', id)));
+      await conn.query(sql.toString());
     }
 
     response = {
-      body: JSON.stringify({ data: parsed }),
+      body: JSON.stringify({ data: style }),
       headers,
       statusCode: 200,
     };

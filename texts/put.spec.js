@@ -120,7 +120,7 @@ describe('put.js', () => {
       active: true,
     });
 
-    const callback = async () => {
+    const callback = async (err, result) => {
       const data = await conn.query(select().from('style').where({ component: 'a', active: true }).toString());
       const parsed = parse(data[0], true);
 

@@ -130,6 +130,8 @@ describe('get.js', () => {
   });
 
   it('컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
+    const expectedComponent = 'expectedComponent';
+
     await conn.query(insert('style', { component: 'comp1' }).toString());
     await conn.query(insert('style', { component: 'comp1', active: true }).toString());
     await conn.query(insert('style', { component: 'comp2', active: true }).toString());

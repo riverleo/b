@@ -1,26 +1,25 @@
 import _ from 'lodash';
 import { select } from 'sql-bricks';
-import style from './lib/table';
 import parse, { parseSQLError } from './lib/parse';
+import { TABLE, COLUMNS } from './lib/constants';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   let data = [];
-  let sql = select().from(style.name).orderBy(`${style.columns.createdAt} DESC`);
+  let sql = select().from(TABLE).orderBy(`${COLUMNS.CREATED_AT} DESC`);
   const conn = await getConnection();
   const params = _.get(e, 'queryStringParameters') || {};
-  const { columns } = style;
   const { active, component, groupBy } = params;
 
   if (!_.isNil(active)) {
-    sql = sql.where(columns.active, _.toLower(active) === 'true');
+    sql = sql.where(COLUMNS.ACTIVE, _.toLower(active) === 'true');
   }
 
   if (!_.isNil(component)) {
-    sql = sql.where(columns.component, component);
+    sql = sql.where(COLUMNS.COMPONENT, component);
   }
 
-  if (!_.isNil(groupBy) && _.includes(_.values(style.columns), groupBy)) {
+  if (!_.isNil(groupBy) && _.includes(_.values(COLUMNS), groupBy)) {
     sql = sql.groupBy(groupBy);
   }
 
@@ -28,7 +27,7 @@ export default async (e, context, callback) => {
   const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
-    data = _.map(await conn.query(sql.toString()), s => parse(s, true));
+    data = _.map(await conn.query(sql.toString()), style => parse(style, true));
 
     response = {
       body: JSON.stringify({ data }),

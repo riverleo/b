@@ -1,0 +1,14 @@
+{
+  "test": {
+    "host": "localhost",
+    "user": "root",
+    "password": "mysql",
+    "database": "wslo"
+  },
+  "prod": {
+    "host": "13.125.216.161",
+    "user": "root",
+    "password": "smMX?[JfRxbifapdZJB3oJNT{ho@7KLsGr]XxChZREgoA6r6pL",
+    "database": "wslo"
+  }
+}

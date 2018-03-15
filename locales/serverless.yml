@@ -1,0 +1,21 @@
+service:
+  name: locales-api
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: nodejs6.10
+  profile: workslow
+
+functions:
+  get:
+    handler: get.default
+    events:
+      - http:
+          method: get
+          path: locales
+          cors: true

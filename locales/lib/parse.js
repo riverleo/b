@@ -13,14 +13,12 @@ export const parseSQLError = error => ({
 });
 
 export default ({
-  name,
   body,
   active,
   component,
   ...props
 }, isAllowNilValue, nullValue = null) => {
   const parsed = {
-    name: !_.isNil(name) ? String(name) : nullValue,
     body: !_.isNil(body) ? String(body) : nullValue,
     active: !_.isNil(active) ? Boolean(active) : nullValue,
     component: !_.isNil(component) ? String(component) : nullValue,

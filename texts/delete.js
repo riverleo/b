@@ -1,11 +1,11 @@
 import { delete as del } from 'sql-bricks';
-import style from './lib/table';
+import { TABLE } from './lib/constants';
 import { parseSQLError } from './lib/parse';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   const { id } = e.pathParameters;
-  const sql = del(style.name).where({ id });
+  const sql = del(TABLE).where({ id });
   const conn = await getConnection();
 
   let response;
