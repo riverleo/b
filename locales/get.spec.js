@@ -17,9 +17,9 @@ describe('get.js', () => {
   });
 
   it('전체 지역정보를 불러올 때', async () => {
-    await conn.query(insert('locale', { country: 'ko', language: 'KR' }).toString());
-    await conn.query(insert('locale', { country: 'en', language: 'US' }).toString());
-    await conn.query(insert('locale', { country: 'ja', language: 'JP' }).toString());
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'US' }).toString());
+    await conn.query(insert('locale', { language: 'ja', country: 'JP' }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
@@ -125,9 +125,11 @@ describe('get.js', () => {
       expect(data[0]).toHaveProperty('language', expectedLanguage);
     };
 
-    return get({ queryStringParameters: {
-      country: expectedCountry,
-      language: expectedLanguage,
-    } }, null, callback);
+    return get({
+      queryStringParameters: {
+        country: expectedCountry,
+        language: expectedLanguage,
+      },
+    }, null, callback);
   });
 });

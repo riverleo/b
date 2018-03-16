@@ -19,6 +19,7 @@ export default ({
   ...props
 }, isAllowNilValue, nullValue = null) => {
   const parsed = {
+    lcid: `${_.toLower(language)}_${_.toUpper(country)}`,
     active: !_.isNil(active) ? Boolean(active) : nullValue,
     country: !_.isNil(country) ? String(country) : nullValue,
     language: !_.isNil(language) ? String(language) : nullValue,
