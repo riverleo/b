@@ -1,26 +1,28 @@
 import _ from 'lodash';
 import { select } from 'sql-bricks';
+import locale from './lib/table';
 import parse, { parseSQLError } from './lib/parse';
-import { TABLE, COLUMNS } from './lib/constants';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
-  let data = [];
-  let sql = select().from(TABLE).orderBy(`${COLUMNS.CREATED_AT} DESC`);
   const conn = await getConnection();
   const params = _.get(e, 'queryStringParameters') || {};
-  const { active, component, groupBy } = params;
+  const { name, columns } = locale;
+  const { country, language, active } = params;
+
+  let data = [];
+  let sql = select().from(name).orderBy(`${columns.createdAt} DESC`);
+
+  if (!_.isNil(country)) {
+    sql = sql.where(columns.country, country);
+  }
+
+  if (!_.isNil(language)) {
+    sql = sql.where(columns.language, language);
+  }
 
   if (!_.isNil(active)) {
-    sql = sql.where(COLUMNS.ACTIVE, _.toLower(active) === 'true');
-  }
-
-  if (!_.isNil(component)) {
-    sql = sql.where(COLUMNS.COMPONENT, component);
-  }
-
-  if (!_.isNil(groupBy) && _.includes(_.values(COLUMNS), groupBy)) {
-    sql = sql.groupBy(groupBy);
+    sql = sql.where(columns.active, _.toLower(active) === 'true');
   }
 
   let response;

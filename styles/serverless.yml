@@ -17,21 +17,21 @@ functions:
     events:
       - http:
           method: get
-          path: styles
+          path: /
           cors: true
   post:
     handler: post.default
     events:
       - http:
           method: post
-          path: styles
+          path: /
           cors: true
   put:
     handler: put.default
     events:
       - http:
           method: put
-          path: styles/{id}
+          path: /{id}
           cors: true
           request:
             parameters:
@@ -42,7 +42,7 @@ functions:
     events:
       - http:
           method: delete
-          path: styles/{id}
+          path: /{id}
           cors: true
           request:
             parameters:

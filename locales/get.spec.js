@@ -8,18 +8,18 @@ describe('get.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
-    await conn.query('TRUNCATE style');
+    await conn.query('TRUNCATE locale');
   });
 
   afterEach(async () => {
-    await conn.query('TRUNCATE style');
+    await conn.query('TRUNCATE locale');
     conn.end();
   });
 
-  it('전체 스타일시트들을 불러올 때', async () => {
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp2' }).toString());
-    await conn.query(insert('style', { component: 'comp3' }).toString());
+  it('전체 지역정보를 불러올 때', async () => {
+    await conn.query(insert('locale', { country: 'ko', language: 'KR' }).toString());
+    await conn.query(insert('locale', { country: 'en', language: 'US' }).toString());
+    await conn.query(insert('locale', { country: 'ja', language: 'JP' }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
@@ -30,120 +30,104 @@ describe('get.js', () => {
     return get({}, null, callback);
   });
 
-  it('활성화된 스타일시트들만 불러올 때', async () => {
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp2' }).toString());
-    await conn.query(insert('style', { component: 'comp3' }).toString());
-    await conn.query(insert('style', { component: 'comp4', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp5', active: true }).toString());
+  it('활성화된 지역정보만 불러올 때', async () => {
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'US' }).toString());
+    await conn.query(insert('locale', { language: 'ja', country: 'JP' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'GB', active: true }).toString());
+    await conn.query(insert('locale', { language: 'zh', country: 'CN', active: true }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
 
       expect(data).toHaveLength(2);
-      _.forEach(data, style => expect(style).toHaveProperty('active', true));
+      _.forEach(data, locale => expect(locale).toHaveProperty('active', true));
     };
 
     return get({ queryStringParameters: { active: 'true' } }, null, callback);
   });
 
-  it('비활성화된 스타일시트들만 불러올 때', async () => {
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp2' }).toString());
-    await conn.query(insert('style', { component: 'comp3' }).toString());
-    await conn.query(insert('style', { component: 'comp4', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp5', active: true }).toString());
+  it('비활성화된 지역정보만 불러올 때', async () => {
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'US' }).toString());
+    await conn.query(insert('locale', { language: 'ja', country: 'JP' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'GB', active: true }).toString());
+    await conn.query(insert('locale', { language: 'zh', country: 'CN', active: true }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
 
       expect(data).toHaveLength(3);
-      _.forEach(data, style => expect(style).toHaveProperty('active', false));
+      _.forEach(data, locale => expect(locale).toHaveProperty('active', false));
     };
 
     return get({ queryStringParameters: { active: 'false' } }, null, callback);
   });
 
-  it('특정 컴포넌트의 스타일시트들만 불러올 때', async () => {
-    const expectedComponent = 'expectedComponent';
+  it('특정 국가의 지역정보만 불러올 때', async () => {
+    const expectedCountry = 'CN';
 
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp1', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: expectedComponent, active: true }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'US' }).toString());
+    await conn.query(insert('locale', { language: 'ja', country: 'JP' }).toString());
+    await conn.query(insert('locale', { language: 'zh', country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'nl', country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'af', country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'sk', country: expectedCountry }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
 
       expect(data).toHaveLength(4);
-      _.forEach(data, style => expect(style).toHaveProperty('component', expectedComponent));
+      _.forEach(data, locale => expect(locale).toHaveProperty('country', expectedCountry));
     };
 
-    return get({ queryStringParameters: { component: expectedComponent } }, null, callback);
+    return get({ queryStringParameters: { country: expectedCountry } }, null, callback);
   });
 
-  it('특정 컴포넌트의 활성화된 스타일시트들만 불러올 때', async () => {
-    const expectedComponent = 'expectedComponent';
+  it('특정 언어의 지역정보만 불러올 때', async () => {
+    const expectedLanguage = 'zh';
 
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp1', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: expectedComponent, active: true }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: 'en', country: 'US' }).toString());
+    await conn.query(insert('locale', { language: 'ja', country: 'JP' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'GB' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'CN' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'PR' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'SK' }).toString());
+    const callback = (err, result) => {
+      const { data } = JSON.parse(result.body);
+
+      expect(data).toHaveLength(4);
+      _.forEach(data, locale => expect(locale).toHaveProperty('language', expectedLanguage));
+    };
+
+    return get({ queryStringParameters: { language: expectedLanguage } }, null, callback);
+  });
+
+  it('특정 국가와 언어의 지역정보만 불러올 때', async () => {
+    const expectedCountry = 'es';
+    const expectedLanguage = 'PR';
+
+    await conn.query(insert('locale', { language: 'ko', country: 'KR' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'US' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: 'JP' }).toString());
+    await conn.query(insert('locale', { language: expectedLanguage, country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'zh', country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'nl', country: expectedCountry }).toString());
+    await conn.query(insert('locale', { language: 'af', country: expectedCountry }).toString());
 
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
 
       expect(data).toHaveLength(1);
-      expect(data[0]).toHaveProperty('component', expectedComponent);
-      expect(data[0]).toHaveProperty('active', true);
+      expect(data[0]).toHaveProperty('country', expectedCountry);
+      expect(data[0]).toHaveProperty('language', expectedLanguage);
     };
 
-    return get({ queryStringParameters: { component: expectedComponent, active: 'true' } }, null, callback);
-  });
-
-  it('특정 컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
-    const expectedComponent = 'expectedComponent';
-
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp1', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: expectedComponent, active: true }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-    await conn.query(insert('style', { component: expectedComponent }).toString());
-
-    const callback = (err, result) => {
-      const { data } = JSON.parse(result.body);
-
-      expect(data).toHaveLength(3);
-      expect(data[0]).toHaveProperty('component', expectedComponent);
-      expect(data[0]).toHaveProperty('active', false);
-    };
-
-    return get({ queryStringParameters: { component: expectedComponent, active: 'false' } }, null, callback);
-  });
-
-  it('컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
-    const expectedComponent = 'expectedComponent';
-
-    await conn.query(insert('style', { component: 'comp1' }).toString());
-    await conn.query(insert('style', { component: 'comp1', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp2', active: true }).toString());
-    await conn.query(insert('style', { component: 'comp3' }).toString());
-    await conn.query(insert('style', { component: 'comp4' }).toString());
-
-    const callback = (err, result) => {
-      const { data } = JSON.parse(result.body);
-
-      expect(data).toHaveLength(4);
-    };
-
-    return get({ queryStringParameters: { groupBy: 'component' } }, null, callback);
+    return get({ queryStringParameters: {
+      country: expectedCountry,
+      language: expectedLanguage,
+    } }, null, callback);
   });
 });
