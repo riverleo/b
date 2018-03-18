@@ -14,7 +14,7 @@ describe('post.js', () => {
     conn.end();
   });
 
-  it('정상적인 본문으로 요청했을 때', () => {
+  it.skip('정상적인 본문으로 요청했을 때', () => {
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
 
@@ -29,7 +29,7 @@ describe('post.js', () => {
     return post({ body: JSON.stringify({ component: 'comp' }) }, null, callback);
   });
 
-  it('빈 본문으로 요청했을 때', () => {
+  it.skip('빈 본문으로 요청했을 때', () => {
     const callback = (err, result) => {
       const { error } = JSON.parse(result.body);
 

@@ -1,12 +1,15 @@
 import _ from 'lodash';
 import { select, insert } from 'sql-bricks';
-import { TABLE, COLUMNS } from './lib/constants';
+import text, { translation } from './lib/constants';
 import parse, { parseSQLError } from './lib/parse';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
-  const { COMPONENT, BODY, ACTIVE } = COLUMNS;
-  const picked = _.pick(JSON.parse(e.body), [COMPONENT, BODY, ACTIVE]);
+  const picked = _.pick(JSON.parse(e.body), [
+    text.columns.key,
+    translation.columns.lcid,
+    translation.columns.body,
+  ]);
   const sql = insert(TABLE, parse(picked, true));
   const conn = await getConnection();
 

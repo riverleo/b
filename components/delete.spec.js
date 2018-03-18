@@ -9,20 +9,19 @@ describe('delete.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
-    await conn.query('TRUNCATE text');
-    await conn.query('TRUNCATE translation');
-    const { insertId } = await conn.query(insert('text', { component: 'anonymous' }).toString());
-    const raw = await conn.query(select().from('text').where({ id: insertId }).toString());
+    await conn.query('TRUNCATE component');
+    const { insertId } = await conn.query(insert('component', { '`key`': 'anonymous' }).toString());
+    const raw = await conn.query(select().from('component').where({ id: insertId }).toString());
     origin = parse(raw[0]);
   });
 
   afterEach(async () => {
-    await conn.query('TRUNCATE style');
+    await conn.query('TRUNCATE component');
     conn.end();
   });
 
-  it.skip('데이터를 삭제를 요청할 때', async () => {
-    let finded = await conn.query(select().from('style').where({ id: origin.id }).toString());
+  it('데이터를 삭제를 요청할 때', async () => {
+    let finded = await conn.query(select().from('component').where({ id: origin.id }).toString());
 
     expect(finded).toHaveLength(1);
 
@@ -31,14 +30,14 @@ describe('delete.js', () => {
 
       expect(data).toBe(true);
 
-      finded = await conn.query(select().from('style').where({ id: origin.id }).toString());
+      finded = await conn.query(select().from('component').where({ id: origin.id }).toString());
       expect(finded).toHaveLength(0);
     };
 
     return del({ pathParameters: { id: origin.id } }, null, callback);
   });
 
-  it.skip('존재하지 않는 데이터의 삭제를 요청할 때', () => {
+  it('존재하지 않는 데이터의 삭제를 요청할 때', () => {
     const callback = async (err, result) => {
       const { data } = JSON.parse(result.body);
 

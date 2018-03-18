@@ -16,7 +16,7 @@ describe('get.js', () => {
     conn.end();
   });
 
-  it('전체 스타일시트들을 불러올 때', async () => {
+  it.skip('전체 스타일시트들을 불러올 때', async () => {
     await conn.query(insert('style', { component: 'comp1' }).toString());
     await conn.query(insert('style', { component: 'comp2' }).toString());
     await conn.query(insert('style', { component: 'comp3' }).toString());
@@ -30,7 +30,7 @@ describe('get.js', () => {
     return get({}, null, callback);
   });
 
-  it('활성화된 스타일시트들만 불러올 때', async () => {
+  it.skip('활성화된 스타일시트들만 불러올 때', async () => {
     await conn.query(insert('style', { component: 'comp1' }).toString());
     await conn.query(insert('style', { component: 'comp2' }).toString());
     await conn.query(insert('style', { component: 'comp3' }).toString());
@@ -47,7 +47,7 @@ describe('get.js', () => {
     return get({ queryStringParameters: { active: 'true' } }, null, callback);
   });
 
-  it('비활성화된 스타일시트들만 불러올 때', async () => {
+  it.skip('비활성화된 스타일시트들만 불러올 때', async () => {
     await conn.query(insert('style', { component: 'comp1' }).toString());
     await conn.query(insert('style', { component: 'comp2' }).toString());
     await conn.query(insert('style', { component: 'comp3' }).toString());
@@ -64,7 +64,7 @@ describe('get.js', () => {
     return get({ queryStringParameters: { active: 'false' } }, null, callback);
   });
 
-  it('특정 컴포넌트의 스타일시트들만 불러올 때', async () => {
+  it.skip('특정 컴포넌트의 스타일시트들만 불러올 때', async () => {
     const expectedComponent = 'expectedComponent';
 
     await conn.query(insert('style', { component: 'comp1' }).toString());
@@ -85,7 +85,7 @@ describe('get.js', () => {
     return get({ queryStringParameters: { component: expectedComponent } }, null, callback);
   });
 
-  it('특정 컴포넌트의 활성화된 스타일시트들만 불러올 때', async () => {
+  it.skip('특정 컴포넌트의 활성화된 스타일시트들만 불러올 때', async () => {
     const expectedComponent = 'expectedComponent';
 
     await conn.query(insert('style', { component: 'comp1' }).toString());
@@ -107,7 +107,7 @@ describe('get.js', () => {
     return get({ queryStringParameters: { component: expectedComponent, active: 'true' } }, null, callback);
   });
 
-  it('특정 컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
+  it.skip('특정 컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
     const expectedComponent = 'expectedComponent';
 
     await conn.query(insert('style', { component: 'comp1' }).toString());
@@ -129,7 +129,7 @@ describe('get.js', () => {
     return get({ queryStringParameters: { component: expectedComponent, active: 'false' } }, null, callback);
   });
 
-  it('컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
+  it.skip('컴포넌트의 비활성화된 스타일시트들만 불러올 때', async () => {
     const expectedComponent = 'expectedComponent';
 
     await conn.query(insert('style', { component: 'comp1' }).toString());

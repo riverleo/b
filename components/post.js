@@ -1,32 +1,31 @@
 import _ from 'lodash';
-import { select, update } from 'sql-bricks';
-import style from './lib/table';
+import { select, insert } from 'sql-bricks';
+import component from './lib/table';
 import parse, { parseSQLError } from './lib/parse';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
-  const { id } = e.pathParameters;
-  const { name, columns } = style;
-  const omitted = _.values(_.omit(columns, ['id', 'createdAt', 'updatedAt']));
+  const { name, columns } = component;
+  const omitted = _.keys(_.omit(columns, ['id', 'createdAt', 'updatedAt']));
   const picked = _.pick(JSON.parse(e.body), omitted);
-  const sql = update(name, parse(picked)).where({ id });
   const conn = await getConnection();
 
   let response;
   const headers = { 'Access-Control-Allow-Origin': '*' };
 
-  try {
-    if (!_.isEmpty(picked)) {
-      await conn.query(sql.toString());
-    }
+  if (picked.key) {
+    picked[columns.key] = picked.key;
+    delete picked.key;
+  }
 
-    const data = await conn.query(select().from(name).where({ id }).toString());
-    const parsed = parse(data[0], true);
+  try {
+    const { insertId } = await conn.query(insert(name, parse(picked, true)).toString());
+    const data = await conn.query(select().from(name).where({ id: insertId }).toString());
 
     response = {
-      body: JSON.stringify({ data: parsed }),
+      body: JSON.stringify({ data: parse(data[0], true) }),
       headers,
-      statusCode: 200,
+      statusCode: 201,
     };
   } catch (error) {
     response = {

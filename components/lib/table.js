@@ -1,10 +1,9 @@
 export default {
-  name: 'style',
+  name: 'component',
   columns: {
     id: 'id',
-    name: 'name',
-    body: 'body',
-    component: 'component',
+    key: '`key`',
+    style: 'style',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
   },
