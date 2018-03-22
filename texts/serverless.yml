@@ -17,21 +17,21 @@ functions:
     events:
       - http:
           method: get
-          path: texts
+          path: /
           cors: true
   post:
     handler: post.default
     events:
       - http:
           method: post
-          path: texts
+          path: /
           cors: true
   delete:
     handler: delete.default
     events:
       - http:
           method: delete
-          path: texts/{id}
+          path: /{id}
           cors: true
           request:
             parameters:
