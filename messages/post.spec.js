@@ -8,12 +8,12 @@ describe('post.js', () => {
 
   beforeEach(async () => {
     conn = await getConnection();
-    await conn.query('TRUNCATE text');
+    await conn.query('TRUNCATE message');
     await conn.query('TRUNCATE translation');
   });
 
   afterEach(async () => {
-    await conn.query('TRUNCATE text');
+    await conn.query('TRUNCATE message');
     await conn.query('TRUNCATE translation');
     conn.end();
   });
@@ -31,8 +31,8 @@ describe('post.js', () => {
   });
 
   it('기존 텍스트를 수정할 때', async () => {
-    const { insertId } = await conn.query(insert('text', { '`key`': 'key' }).toString());
-    const { insertId: id } = await conn.query(insert('translation', { '`textId`': insertId, body: 'body', lcid: 'ko_KR' }).toString());
+    const { insertId } = await conn.query(insert('message', { '`key`': 'key' }).toString());
+    const { insertId: id } = await conn.query(insert('translation', { '`messageId`': insertId, body: 'body', lcid: 'ko_KR' }).toString());
     let saved = _.first(await conn.query(select().from('translation').where({ id }).toString()));
     expect(saved).toHaveProperty('body', 'body');
 

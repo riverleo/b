@@ -20,46 +20,46 @@ export default async (e, context, callback) => {
       throw newError('`lcid` parameter is required');
     }
 
-    const textTable = table.text.name;
-    const translationTable = table.translation.name;
+    const msgTable = table.message.name;
+    const tslTable = table.translation.name;
     const {
       id: idColumn,
       key: keyColumn,
       createdAt: createdAtColumn,
-    } = table.text.columns;
+    } = table.message.columns;
     const {
       body: bodyColumn,
       lcid: lcidColumn,
-      textId: textIdColumn,
+      messageId: msgIdColumn,
     } = table.translation.columns;
 
-    const textParams = { [keyColumn]: picked.key };
-    let text = _.first(await conn.query(select().from(textTable).where(textParams).toString()));
+    const msgParams = { [keyColumn]: picked.key };
+    let message = _.first(await conn.query(select().from(msgTable).where(msgParams).toString()));
 
-    if (_.isNil(text)) {
-      const { insertId: textId } = await conn.query(insert(textTable, textParams).toString());
-      text = _.first(await conn.query(select().from(textTable).where({ id: textId }).toString()));
+    if (_.isNil(message)) {
+      const { insertId: msgId } = await conn.query(insert(msgTable, msgParams).toString());
+      message = _.first(await conn.query(select().from(msgTable).where({ id: msgId }).toString()));
     }
 
-    const translationParams = { [lcidColumn]: picked.lcid, [textIdColumn]: text.id };
-    const translationSelectSQL = select().from(translationTable).where(translationParams);
-    const translation = _.first(await conn.query(translationSelectSQL.toString()));
+    const tslParams = { [lcidColumn]: picked.lcid, [msgIdColumn]: message.id };
+    const tslSelectSQL = select().from(tslTable).where(tslParams);
+    const translation = _.first(await conn.query(tslSelectSQL.toString()));
 
     if (_.isNil(translation)) {
       await conn.query(insert(
-        translationTable,
-        _.assign({}, translationParams, { [bodyColumn]: picked.body }),
+        tslTable,
+        _.assign({}, tslParams, { [bodyColumn]: picked.body }),
       ).toString());
     } else {
       await conn.query(update(
-        translationTable,
-        _.assign({}, translationParams, { [bodyColumn]: picked.body }),
+        tslTable,
+        _.assign({}, tslParams, { [bodyColumn]: picked.body }),
       ).toString());
     }
 
-    const data = await conn.query(select().from(textTable)
-      .join(translationTable, { [textIdColumn]: idColumn })
-      .where({ [textIdColumn]: text.id })
+    const data = await conn.query(select().from(msgTable)
+      .join(tslTable, { [msgIdColumn]: idColumn })
+      .where({ [msgIdColumn]: message.id })
       .orderBy(`${createdAtColumn} DESC`)
       .toString());
 

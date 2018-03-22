@@ -26,10 +26,10 @@ export const parseTranslation = ({ body, lcid }, isAllowNilValue, nullValue = nu
 };
 
 export default (translations, isAllowNilValue, nullValue = null) => {
-  const { key, textId } = _.first(translations) || {};
+  const { key, messageId } = _.first(translations) || {};
 
   const parsed = {
-    id: !_.isNil(textId) ? String(textId) : nullValue,
+    id: !_.isNil(messageId) ? Number(messageId) : nullValue,
     key: !_.isNil(key) ? String(key) : nullValue,
     translations: _.map(translations, t => parseTranslation(t, isAllowNilValue, nullValue)),
   };

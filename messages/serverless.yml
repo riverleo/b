@@ -1,5 +1,5 @@
 service:
-  name: texts-api
+  name: messages-api
 
 plugins:
   - serverless-webpack

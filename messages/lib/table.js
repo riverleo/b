@@ -1,13 +1,13 @@
-const textTableName = 'text';
+const messageTableName = 'message';
 const translationTableName = 'translation';
 
 export default {
-  text: {
-    name: textTableName,
+  message: {
+    name: messageTableName,
     columns: {
-      id: `\`${textTableName}\`.\`id\``,
-      key: `\`${textTableName}\`.\`key\``,
-      createdAt: `\`${textTableName}\`.\`createdAt\``,
+      id: `\`${messageTableName}\`.\`id\``,
+      key: `\`${messageTableName}\`.\`key\``,
+      createdAt: `\`${messageTableName}\`.\`createdAt\``,
     },
   },
   translation: {
@@ -16,7 +16,7 @@ export default {
       id: `\`${translationTableName}\`.\`id\``,
       body: `\`${translationTableName}\`.\`body\``,
       lcid: `\`${translationTableName}\`.\`lcid\``,
-      textId: `\`${translationTableName}\`.\`textId\``,
+      messageId: `\`${translationTableName}\`.\`messageId\``,
       createdAt: `\`${translationTableName}\`.\`createdAt\``,
       updatedAt: `\`${translationTableName}\`.\`updatedAt\``,
     },

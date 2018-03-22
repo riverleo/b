@@ -5,15 +5,15 @@ import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   const { id } = e.pathParameters;
-  const { text, translation } = table;
+  const { message, translation } = table;
   const conn = await getConnection();
 
   let response;
   const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
-    await conn.query(del(text.name).where({ id }).toString());
-    await conn.query(del(translation.name).where({ '`textId`': id }).toString());
+    await conn.query(del(message.name).where({ id }).toString());
+    await conn.query(del(translation.name).where({ '`messageId`': id }).toString());
 
     response = {
       body: JSON.stringify({ data: true }),
