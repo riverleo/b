@@ -1,22 +1,32 @@
 import _ from 'lodash';
-import { select, like } from 'sql-bricks';
-import text, { translation } from './lib/table';
+import { select, in as $in, like } from 'sql-bricks';
+import table from './lib/table';
 import parse, { parseSQLError } from './lib/parse';
 import getConnection from './lib/getConnection';
 
 export default async (e, context, callback) => {
   const conn = await getConnection();
   const params = _.get(e, 'queryStringParameters') || {};
-  const { q, key, lcid, active } = params;
+  const { text, translation } = table;
+  const {
+    q,
+    key,
+    lcid,
+  } = params;
 
   let data = [];
   let sql = select()
     .from(text.name)
-    .join(translation.name, { [translation.textId]: text.id })
+    .join(translation.name, { [translation.columns.textId]: text.columns.id })
     .orderBy(`${text.columns.createdAt} DESC`);
 
   if (!_.isNil(q)) {
-    sql = sql.where(like(translation.columns.body, `%${q}%`));
+    sql = sql.select(text.columns.id).where(like(translation.columns.body, `%${q}%`)).groupBy(text.columns.id);
+    sql = select()
+      .from(text.name)
+      .join(translation.name, { [translation.columns.textId]: text.columns.id })
+      .where($in(text.columns.id, sql))
+      .orderBy(`${text.columns.createdAt} DESC`);
   }
 
   if (!_.isNil(key)) {
@@ -24,18 +34,15 @@ export default async (e, context, callback) => {
   }
 
   if (!_.isNil(lcid)) {
-    sql = sql.where(text.columns.lcid, `%${lcid}%`);
-  }
-
-  if (!_.isNil(active)) {
-    sql = sql.where(text.columns.active, _.toLower(active) === 'true');
+    sql = sql.where(translation.columns.lcid, lcid);
   }
 
   let response;
   const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
-    data = _.map(await conn.query(sql.toString()), style => parse(style, true));
+    const grouped = _.groupBy(await conn.query(sql.toString()), 'textId');
+    data = _.map(_.values(grouped), t => parse(t, true));
 
     response = {
       body: JSON.stringify({ data }),

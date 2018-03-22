@@ -9,20 +9,29 @@ export const newError = (message, code) => {
 
 export const parseSQLError = error => ({
   code: error.code,
-  message: error.sqlMessage,
+  message: error.sqlMessage || error.message,
 });
 
-export default ({
-  body,
-  active,
-  component,
-  ...props
-}, isAllowNilValue, nullValue = null) => {
+export const parseTranslation = ({ body, lcid }, isAllowNilValue, nullValue = null) => {
   const parsed = {
     body: !_.isNil(body) ? String(body) : nullValue,
-    active: !_.isNil(active) ? Boolean(active) : nullValue,
-    component: !_.isNil(component) ? String(component) : nullValue,
-    ...props,
+    lcid: !_.isNil(lcid) ? String(lcid) : nullValue,
+  };
+
+  if (!isAllowNilValue) {
+    return _.pickBy(parsed, v => !_.isNil(v));
+  }
+
+  return parsed;
+};
+
+export default (translations, isAllowNilValue, nullValue = null) => {
+  const { key, textId } = _.first(translations) || {};
+
+  const parsed = {
+    id: !_.isNil(textId) ? String(textId) : nullValue,
+    key: !_.isNil(key) ? String(key) : nullValue,
+    translations: _.map(translations, t => parseTranslation(t, isAllowNilValue, nullValue)),
   };
 
   if (!isAllowNilValue) {
