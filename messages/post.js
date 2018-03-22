@@ -16,10 +16,6 @@ export default async (e, context, callback) => {
       throw newError('`key` parameter is required');
     }
 
-    if (_.isNil(picked.lcid)) {
-      throw newError('`lcid` parameter is required');
-    }
-
     const msgTable = table.message.name;
     const tslTable = table.translation.name;
     const {
@@ -41,20 +37,22 @@ export default async (e, context, callback) => {
       message = _.first(await conn.query(select().from(msgTable).where({ id: msgId }).toString()));
     }
 
-    const tslParams = { [lcidColumn]: picked.lcid, [msgIdColumn]: message.id };
-    const tslSelectSQL = select().from(tslTable).where(tslParams);
-    const translation = _.first(await conn.query(tslSelectSQL.toString()));
+    if (!_.isNil(picked.lcid)) {
+      const tslParams = { [lcidColumn]: picked.lcid, [msgIdColumn]: message.id };
+      const tslSelectSQL = select().from(tslTable).where(tslParams);
+      const translation = _.first(await conn.query(tslSelectSQL.toString()));
 
-    if (_.isNil(translation)) {
-      await conn.query(insert(
-        tslTable,
-        _.assign({}, tslParams, { [bodyColumn]: picked.body }),
-      ).toString());
-    } else {
-      await conn.query(update(
-        tslTable,
-        _.assign({}, tslParams, { [bodyColumn]: picked.body }),
-      ).toString());
+      if (_.isNil(translation)) {
+        await conn.query(insert(
+          tslTable,
+          _.assign({}, tslParams, { [bodyColumn]: picked.body }),
+        ).toString());
+      } else {
+        await conn.query(update(
+          tslTable,
+          _.assign({}, tslParams, { [bodyColumn]: picked.body }),
+        ).toString());
+      }
     }
 
     const data = await conn.query(select().from(msgTable)

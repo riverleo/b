@@ -74,7 +74,7 @@ describe('post.js', () => {
     const callback = (err, result) => {
       const { error } = JSON.parse(result.body);
 
-      expect(error).toBeDefined();
+      expect(error).not.toBeDefined();
     };
 
     return post({ body: JSON.stringify({ key: 'key', body: 'body' }) }, null, callback);
