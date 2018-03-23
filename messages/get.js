@@ -15,17 +15,29 @@ export default async (e, context, callback) => {
   } = params;
 
   let data = [];
-  let sql = select()
+  let columns = [
+    message.columns.id,
+    message.columns.key,
+    translation.columns.body,
+    translation.columns.lcid,
+  ];
+  let sql = select(columns)
     .from(message.name)
-    .join(translation.name, { [translation.columns.messageId]: message.columns.id })
+    .leftJoin(translation.name, { [translation.columns.messageId]: message.columns.id })
     .orderBy(`${message.columns.createdAt} DESC`);
 
   if (!_.isNil(q)) {
-    sql = sql.select(message.columns.id).where(like(translation.columns.body, `%${q}%`)).groupBy(message.columns.id);
-    sql = select()
+    const inSQL = select(message.columns.id)
       .from(message.name)
       .join(translation.name, { [translation.columns.messageId]: message.columns.id })
-      .where($in(message.columns.id, sql))
+      .where(like(translation.columns.body, `%${q}%`))
+      .groupBy(message.columns.id)
+      .orderBy(`${message.columns.createdAt} DESC`);
+
+    sql = select(columns)
+      .from(message.name)
+      .join(translation.name, { [translation.columns.messageId]: message.columns.id })
+      .where($in(message.columns.id, inSQL))
       .orderBy(`${message.columns.createdAt} DESC`);
   }
 
@@ -41,7 +53,7 @@ export default async (e, context, callback) => {
   const headers = { 'Access-Control-Allow-Origin': '*' };
 
   try {
-    const grouped = _.groupBy(await conn.query(sql.toString()), 'messageId');
+    const grouped = _.groupBy(await conn.query(sql.toString()), 'id');
     data = _.map(_.values(grouped), t => parse(t, true));
 
     response = {

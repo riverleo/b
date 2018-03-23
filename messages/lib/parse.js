@@ -13,6 +13,8 @@ export const parseSQLError = error => ({
 });
 
 export const parseTranslation = ({ body, lcid }, isAllowNilValue, nullValue = null) => {
+  if (_.isNil(lcid)) { return undefined; }
+
   const parsed = {
     body: !_.isNil(body) ? String(body) : nullValue,
     lcid: !_.isNil(lcid) ? String(lcid) : nullValue,
@@ -26,12 +28,13 @@ export const parseTranslation = ({ body, lcid }, isAllowNilValue, nullValue = nu
 };
 
 export default (translations, isAllowNilValue, nullValue = null) => {
-  const { key, messageId } = _.first(translations) || {};
+  const { id, key } = _.first(translations) || {};
+  const parser = t => parseTranslation(t, isAllowNilValue, nullValue);
 
   const parsed = {
-    id: !_.isNil(messageId) ? Number(messageId) : nullValue,
+    id: !_.isNil(id) ? Number(id) : nullValue,
     key: !_.isNil(key) ? String(key) : nullValue,
-    translations: _.map(translations, t => parseTranslation(t, isAllowNilValue, nullValue)),
+    translations: _.compact(_.map(translations, parser)),
   };
 
   if (!isAllowNilValue) {
