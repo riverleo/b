@@ -46,8 +46,11 @@ const upsert = async (conn, body) => {
     } else {
       await conn.query(update(
         tslTable,
-        _.assign({}, tslParams, { [bodyColumn]: picked.body }),
-      ).toString());
+        { [bodyColumn]: picked.body },
+      ).where({
+        [lcidColumn]: picked.lcid,
+        [msgIdColumn]: message.id,
+      }).toString());
     }
   }
 
@@ -77,7 +80,6 @@ export default async (e, context, callback) => {
 
     if (_.isArray(body)) {
       data = await Promise.map(body, p => upsert(conn, p));
-      console.log({ data });
     } else {
       data = await upsert(conn, body);
     }
