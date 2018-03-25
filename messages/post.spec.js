@@ -18,6 +18,18 @@ describe('post.js', () => {
     conn.end();
   });
 
+  it('`key`만 가지고 생성을 요청했을 때', () => {
+    const callback = (err, result) => {
+      const { data } = JSON.parse(result.body);
+
+      expect(data.id).toBeDefined();
+      expect(data).toHaveProperty('key', 'key');
+      expect(data).toHaveProperty('translations');
+    };
+
+    return post({ body: JSON.stringify({ key: 'key' }) }, null, callback);
+  });
+
   it('정상적인 본문으로 요청했을 때', () => {
     const callback = (err, result) => {
       const { data } = JSON.parse(result.body);
@@ -28,6 +40,20 @@ describe('post.js', () => {
     };
 
     return post({ body: JSON.stringify({ key: 'key', body: 'body', lcid: 'ko_KR' }) }, null, callback);
+  });
+
+  it('배열 본문으로 요청했을 때', () => {
+    const callback = (err, result) => {
+      const { data } = JSON.parse(result.body);
+
+      _.map(data, d => {
+        expect(d).toHaveProperty('id');
+        expect(d).toHaveProperty('key');
+        expect(d).toHaveProperty('translations');
+      });
+    };
+
+    return post({ body: JSON.stringify([{ key: 'key', body: 'body', lcid: 'ko_KR' }]) }, null, callback);
   });
 
   it('기존 텍스트를 수정할 때', async () => {

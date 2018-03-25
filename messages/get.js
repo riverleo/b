@@ -13,14 +13,14 @@ export default async (e, context, callback) => {
     key,
     lcid,
   } = params;
-
-  let data = [];
-  let columns = [
+  const columns = [
     message.columns.id,
     message.columns.key,
     translation.columns.body,
     translation.columns.lcid,
   ];
+
+  let data = [];
   let sql = select(columns)
     .from(message.name)
     .leftJoin(translation.name, { [translation.columns.messageId]: message.columns.id })
