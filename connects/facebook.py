@@ -1,7 +1,6 @@
 import json
 from requests import get
 from props import set_connection
-from contrib import jwt_encode, assign_query_params
 
 
 FB_APP_ID = '691683050955452'
@@ -46,20 +45,16 @@ def handler(event, context):
             'access_token': access_token,
         }).json()
 
-        connection, is_new = set_connection(
+        connection, location = set_connection(
             'facebook',
             data.get('id'),
             access_token,
+            state.get('referer'),
             props={
                 'candidateName': data.get('name'),
                 'candidateEmail': data.get('email'),
             }
         )
-
-        location = assign_query_params(state.get('referer'), {
-            'isNew': int(is_new),
-            'authorization': jwt_encode(connection.get('user_id')),
-        })
 
     return {
         'statusCode': 302,

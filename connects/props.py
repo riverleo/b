@@ -1,4 +1,4 @@
-from contrib import db, new_id
+from contrib import db, new_id, assign_query_params, jwt_encode
 
 
 def set_props(user_id, props={}, unique=None):
@@ -21,7 +21,7 @@ def set_props(user_id, props={}, unique=None):
     return props
 
 
-def set_connection(provider, provider_id, access_token, props={}):
+def set_connection(provider, provider_id, access_token, referer, props={}):
     connection = (
         db.table('userConnection')
         .where({
@@ -31,7 +31,7 @@ def set_connection(provider, provider_id, access_token, props={}):
     )
 
     if connection:
-        is_new = False
+        created = False
         user_id = connection.get('userId')
         (
             db.table('userConnection')
@@ -39,7 +39,7 @@ def set_connection(provider, provider_id, access_token, props={}):
             .update({'token': access_token})
         )
     else:
-        is_new = True
+        created = True
         user_id = new_id()
 
         conn_id = db.table('userConnection').insert_get_id({
@@ -54,4 +54,9 @@ def set_connection(provider, provider_id, access_token, props={}):
 
         connection = db.table('userConnection').where('id', conn_id).first()
 
-    return connection, is_new
+    location = assign_query_params(referer, {
+        'ssid': jwt_encode(connection.get('user_id')),
+        'created': int(created),
+    })
+
+    return connection, location
