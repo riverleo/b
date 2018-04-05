@@ -23,7 +23,7 @@ class GetSuite(unittest.TestCase):
             },
             'body': json.dumps({
                 'props': {
-                    'name': 'riverleo',
+                    'username': 'riverleo',
                     'password': 'wslo1234',
                 },
             }),
@@ -32,7 +32,7 @@ class GetSuite(unittest.TestCase):
         body = json.loads(res['body'])
 
         self.assertIsNotNone(body['data']['id'])
-        self.assertEqual(body['data']['props']['name'], 'riverleo')
+        self.assertEqual(body['data']['props']['username'], 'riverleo')
         self.assertFalse('password' in body['data']['props'])
 
     def test_put_nonexistant(self):
@@ -42,7 +42,7 @@ class GetSuite(unittest.TestCase):
             },
             'body': json.dumps({
                 'props': {
-                    'name': 'riverleo',
+                    'username': 'riverleo',
                     'password': 'wslo1234',
                 },
             }),

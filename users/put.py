@@ -20,7 +20,7 @@ def handler(event, context):
     props = body.get('props') or {}
     verbose = body.get('verbose')
     user_id = decoded.get('user_id')
-    unique_props = {k: v for k, v in props.items() if k in ('name', 'email')}
+    unique_props = {k: v for k, v in props.items() if k in ('username', 'email')}
     custom_props = {k: v for k, v in props.items() if k not in unique_props}
 
     if db.table('user').where('id', user_id).first() is None:

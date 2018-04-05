@@ -10,7 +10,7 @@ def handler(event, context):
 
     data = {}
     props = body.get('props') or {}
-    unique_props = {k: v for k, v in props.items() if k in ['name', 'email']}
+    unique_props = {k: v for k, v in props.items() if k in ['username', 'email']}
 
     for k, v in unique_props.items():
         prop = db.table('userProperty').where({

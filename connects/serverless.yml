@@ -1,0 +1,28 @@
+service: connects-api
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: python3.6
+  profile: workslow
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+functions:
+  get:
+    handler: get.handler
+    events:
+      - http:
+          method: get
+          path: /{provider}
+          cors: true
+          request:
+            parameters:
+              paths:
+                provider: true

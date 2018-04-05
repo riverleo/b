@@ -1,0 +1,17 @@
+service:
+  name: test-api
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: python3.6
+  profile: workslow
+
+functions:
+  get:
+    handler: handler.hello
+    events:
+      - http:
+          method: get
+          path: /

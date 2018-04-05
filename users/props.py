@@ -1,7 +1,5 @@
 from contrib import db
 
-unique_fields = [
-]
 
 def parse(prop, verbose):
     if not verbose:

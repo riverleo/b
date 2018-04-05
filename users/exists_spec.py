@@ -15,23 +15,23 @@ class GetSuite(unittest.TestCase):
         db.table('userProperty').truncate()
 
     def test_exists(self):
-        set_props(new_id(), props={'name': 'riverleo'}, unique=True)
+        set_props(new_id(), props={'username': 'riverleo'}, unique=True)
 
-        event = {'body': json.dumps({'props': {'name': 'riverleo'}})}
+        event = {'body': json.dumps({'props': {'username': 'riverleo'}})}
         res = handler(event, None)
 
         body = json.loads(res['body'])
 
         self.assertEqual(res['statusCode'], 200)
-        self.assertTrue(body['data']['name']['exists'])
-        self.assertEqual(body['data']['name']['value'], 'riverleo')
+        self.assertTrue(body['data']['username']['exists'])
+        self.assertEqual(body['data']['username']['value'], 'riverleo')
 
     def test_not_exists(self):
-        event = {'body': json.dumps({'props': {'name': 'riverleo'}})}
+        event = {'body': json.dumps({'props': {'username': 'riverleo'}})}
         res = handler(event, None)
 
         body = json.loads(res['body'])
 
         self.assertEqual(res['statusCode'], 200)
-        self.assertFalse(body['data']['name']['exists'])
-        self.assertEqual(body['data']['name']['value'], 'riverleo')
+        self.assertFalse(body['data']['username']['exists'])
+        self.assertEqual(body['data']['username']['value'], 'riverleo')
