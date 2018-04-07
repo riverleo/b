@@ -40,6 +40,10 @@ functions:
           method: get
           path: /me
           cors: true
+      - http:
+          method: post
+          path: /me
+          cors: true
   exists:
     handler: exists.handler
     events:

@@ -55,7 +55,7 @@ def set_connection(provider, provider_id, access_token, referer, props={}):
         connection = db.table('userConnection').where('id', conn_id).first()
 
     location = assign_query_params(referer, {
-        'ssid': jwt_encode(connection.get('user_id')),
+        'ssid': jwt_encode(connection.get('userId')),
         'created': int(created),
     })
 

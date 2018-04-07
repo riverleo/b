@@ -1,5 +1,5 @@
 import json
-from contrib import db
+from contrib import UNIQUE_KEYS, db
 
 
 def handler(event, context):
@@ -10,7 +10,7 @@ def handler(event, context):
 
     data = {}
     props = body.get('props') or {}
-    unique_props = {k: v for k, v in props.items() if k in ['username', 'email']}
+    unique_props = {k: v for k, v in props.items() if k in UNIQUE_KEYS}
 
     for k, v in unique_props.items():
         prop = db.table('userProperty').where({

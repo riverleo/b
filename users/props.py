@@ -1,4 +1,4 @@
-from contrib import db
+from contrib import db, jwt_encode
 
 
 def parse(prop, verbose):
@@ -66,7 +66,7 @@ def set_props(user_id, props={}, unique=None):
     return props
 
 
-def get(user_id, keys=[], active=True, verbose=False):
+def get(user_id, keys=[], active=True, verbose=False, with_ssid=False):
     props = get_props(
         user_id,
         keys=keys,
@@ -74,7 +74,12 @@ def get(user_id, keys=[], active=True, verbose=False):
         verbose=verbose,
     )
 
-    return {
+    user = {
         'id': user_id,
         'props': props,
     }
+
+    if with_ssid:
+        user['ssid'] = jwt_encode(user_id)
+
+    return user

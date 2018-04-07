@@ -32,6 +32,9 @@ if 'pytest' in sys.modules:
 db = DatabaseManager(config)
 
 
+UNIQUE_KEYS = ('username', 'email')
+
+
 def new_id(length=10, digit_only=False):
     source = digits if digit_only else digits + ascii_letters
 
@@ -71,6 +74,24 @@ def dumps(body):
     return json.dumps(body or {}, default=converter)
 
 
+def split(s, delimeter=','):
+    if type(s) != str or s is '' or s is None:
+        return []
+
+    return s.split(delimeter)
+
+
+def lower(s):
+    if type(s) != str or s is '' or s is None:
+        return ''
+
+    return s.lower()
+
+
+def boolean(s):
+    return lower(s) == 'true'
+
+
 def new_error(message, code):
     return {
         'code': code,
@@ -88,9 +109,9 @@ def parse_sql_error(err):
     return new_error(message, code)
 
 
-def abort(status_code, body):
+def abort(status_code, error):
     return {
-        'body': json.dumps(body),
+        'body': json.dumps({'error': error}),
         'headers': {'Access-Control-Allow-Origin': '*'},
         'statusCode': status_code,
     }

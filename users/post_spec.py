@@ -26,5 +26,6 @@ class GetSuite(unittest.TestCase):
         body = json.loads(res['body'])
 
         self.assertIsNotNone(body['data']['id'])
+        self.assertIsNotNone(body['data']['ssid'])
         self.assertEqual(body['data']['props']['username'], 'riverleo')
         self.assertFalse('password' in body['data']['props'])

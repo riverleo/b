@@ -1,6 +1,14 @@
 import json
 from props import get, set_props
-from contrib import db, abort, dumps, new_id, password, parse_sql_error
+from contrib import (
+    UNIQUE_KEYS,
+    db,
+    abort,
+    dumps,
+    new_id,
+    password,
+    parse_sql_error,
+)
 
 
 def handler(event, context):
@@ -16,7 +24,7 @@ def handler(event, context):
 
     props = body.get('props') or {}
     verbose = body.get('verbose')
-    unique_props = {k: v for k, v in props.items() if k in ('username', 'email')}
+    unique_props = {k: v for k, v in props.items() if k in UNIQUE_KEYS}
     custom_props = {k: v for k, v in props.items() if k not in unique_props}
 
     if 'password' in custom_props:
@@ -27,14 +35,15 @@ def handler(event, context):
         set_props(user_id, props=custom_props)
         db.table('user').insert(id=user_id)
     except Exception as e:
-        return abort(400, {'error': parse_sql_error(e)})
+        return abort(400, parse_sql_error(e))
 
     return {
         'body': dumps({
             'data': get(
                 user_id,
-                keys=[k for k in props.keys() if k not in ('password')],
+                keys=[k for k in props.keys() if k != 'password'],
                 verbose=verbose,
+                with_ssid=True,
             )
         }),
         'headers': {'Access-Control-Allow-Origin': '*'},
