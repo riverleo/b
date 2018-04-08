@@ -29,6 +29,27 @@ class GetSuite(unittest.TestCase):
 
         self.assertEqual(res['statusCode'], 200)
         self.assertEqual(body['data']['id'], user_id)
+        self.assertEqual(body['data']['roles'], [])
+        self.assertEqual(body['data']['props']['key'], 'value')
+        self.assertIsNone(body['data']['props']['anonymous'])
+
+    def test_me_with_roles(self):
+        user_id = new_id()
+        db.table('user').insert(id=user_id)
+        set_props(user_id, props={'key': 'value'})
+        db.table('userRole').insert({'userId': user_id, 'type': 'admin'})
+        encoded = jwt_encode(user_id)
+
+        res = handler({
+            'body': json.dumps({'props': ['key', 'anonymous']}),
+            'headers': {'Authorization': 'Bearer {}'.format(encoded)},
+        }, None)
+
+        body = json.loads(res['body'])
+
+        self.assertEqual(res['statusCode'], 200)
+        self.assertEqual(body['data']['id'], user_id)
+        self.assertEqual(body['data']['roles'], ['admin'])
         self.assertEqual(body['data']['props']['key'], 'value')
         self.assertIsNone(body['data']['props']['anonymous'])
 

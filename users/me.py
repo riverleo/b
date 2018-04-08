@@ -58,7 +58,7 @@ def handler(event, context):
     if db.table('user').where('id', user_id).first() is None:
         return abort(400, new_error('invalid token', 1))
 
-    data = get(user_id, keys=keys, verbose=verbose, with_ssid=True)
+    data = get(user_id, keys=keys, verbose=verbose, is_me=True)
 
     return {
         'body': json.dumps({'data': data}),

@@ -66,7 +66,7 @@ def set_props(user_id, props={}, unique=None):
     return props
 
 
-def get(user_id, keys=[], active=True, verbose=False, with_ssid=False):
+def get(user_id, keys=[], active=True, verbose=False, is_me=False):
     props = get_props(
         user_id,
         keys=keys,
@@ -79,7 +79,10 @@ def get(user_id, keys=[], active=True, verbose=False, with_ssid=False):
         'props': props,
     }
 
-    if with_ssid:
+    if is_me:
         user['ssid'] = jwt_encode(user_id)
+
+        roles = db.table('userRole').where('userId', user_id).get()
+        user['roles'] = list(map(lambda r: r.get('type'), roles))
 
     return user

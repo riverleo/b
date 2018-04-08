@@ -43,7 +43,7 @@ def handler(event, context):
                 user_id,
                 keys=[k for k in props.keys() if k != 'password'],
                 verbose=verbose,
-                with_ssid=True,
+                is_me=True,
             )
         }),
         'headers': {'Access-Control-Allow-Origin': '*'},
