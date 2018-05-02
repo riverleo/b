@@ -1,0 +1,49 @@
+service: works-api
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: python3.6
+  profile: workslow
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+functions:
+  post:
+    handler: post.handler
+    events:
+      - http:
+          method: post
+          path: /
+          cors: true
+  get:
+    handler: get.handler
+    events:
+      - http:
+          method: get
+          path: /
+          cors: true
+  getWithId:
+    handler: get_with_id.handler
+    events:
+      - http:
+          method: get
+          path: /{id}
+          cors: true
+  delete:
+    handler: delete.handler
+    events:
+      - http:
+          method: delete
+          path: /{id}
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true

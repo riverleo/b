@@ -4,13 +4,15 @@ from contrib import db, jwt_encode, new_id
 from put import handler
 
 
-class GetSuite(unittest.TestCase):
+class PutSuite(unittest.TestCase):
     def setUp(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def tearDown(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def test_put(self):

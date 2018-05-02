@@ -1,0 +1,31 @@
+service: categories-api
+
+provider:
+  name: aws
+  stage: prod
+  region: ap-northeast-2
+  runtime: python3.6
+  profile: workslow
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+functions:
+  post:
+    handler: post.handler
+    events:
+      - http:
+          method: post
+          path: /
+          cors: true
+  get:
+    handler: get.handler
+    events:
+      - http:
+          method: get
+          path: /
+          cors: true

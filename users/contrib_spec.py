@@ -2,15 +2,7 @@ import unittest
 from contrib import db, new_id, password
 
 
-class GetSuite(unittest.TestCase):
-    def setUp(self):
-        db.table('user').truncate()
-        db.table('userProperty').truncate()
-
-    def tearDown(self):
-        db.table('user').truncate()
-        db.table('userProperty').truncate()
-
+class ContribSuite(unittest.TestCase):
     def test_db(self):
         result = db.select('select 1 + 1 AS v')
 

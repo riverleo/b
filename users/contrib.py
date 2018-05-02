@@ -117,7 +117,7 @@ def abort(status_code, error):
     }
 
 
-JWT_SECRET = 'F9Tx#tT@Jt873L'
+JWT_SECRET = db.table('secret').where('key', 'JWT').pluck('body')
 
 
 def jwt_encode(user_id):

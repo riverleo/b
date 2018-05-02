@@ -1,14 +1,8 @@
 import sys
-import jwt
 import json
-import random
-from urllib import parse as urlparse
-from urllib.parse import urlencode
 from datetime import datetime
-from string import digits, ascii_letters
 from orator import DatabaseManager
 from orator.support.collection import Collection
-
 
 config = {
     'mysql': {
@@ -33,11 +27,7 @@ if 'pytest' in sys.modules:
 
 db = DatabaseManager(config)
 
-
-def new_id(length=10, digit_only=False):
-    source = digits if digit_only else digits + ascii_letters
-
-    return ''.join(random.choice(source) for _ in range(length))
+types = ['work']
 
 
 def converter(o):
@@ -64,32 +54,19 @@ def new_error(message, code):
     }
 
 
-JWT_SECRET = db.table('secret').where('key', 'JWT').pluck('body')
+def parse_sql_error(err):
+    if hasattr(err, 'previous'):
+        code, message = err.previous.args
+    else:
+        code = None
+        message = str(err)
+
+    return new_error(message, code)
 
 
-def jwt_encode(user_id):
-    encoded = jwt.encode({'user_id': user_id}, JWT_SECRET, algorithm='HS256')
-
-    return encoded.decode('utf8')
-
-
-def jwt_decode(raw):
-    token = raw
-
-    if raw.startswith('Bearer'):
-        token = raw[7:]
-
-    try:
-        return jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-    except:
-        return {}
-
-
-def assign_query_params(url, params={}):
-    url = 'https://www.workslow.co' if url is None else url
-    url_parts = list(urlparse.urlparse(url))
-    query = dict(urlparse.parse_qsl(url_parts[4]))
-    query.update(params)
-    url_parts[4] = urlencode(query)
-
-    return urlparse.urlunparse(url_parts)
+def abort(status_code, error):
+    return {
+        'body': json.dumps({'error': error}),
+        'headers': {'Access-Control-Allow-Origin': '*'},
+        'statusCode': status_code,
+    }

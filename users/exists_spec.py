@@ -5,13 +5,15 @@ from props import set_props
 from contrib import db, new_id
 
 
-class GetSuite(unittest.TestCase):
+class ExistsSuite(unittest.TestCase):
     def setUp(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def tearDown(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def test_exists(self):

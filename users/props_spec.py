@@ -4,13 +4,15 @@ from contrib import db
 from props import get_props, set_props
 
 
-class GetSuite(unittest.TestCase):
+class PropsSuite(unittest.TestCase):
     def setUp(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def tearDown(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def test_get_props(self):

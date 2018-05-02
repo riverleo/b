@@ -5,13 +5,15 @@ from props import set_props
 from contrib import db, jwt_encode, new_id, password
 
 
-class GetSuite(unittest.TestCase):
+class MeSuite(unittest.TestCase):
     def setUp(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def tearDown(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def test_me_by_jwt(self):

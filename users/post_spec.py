@@ -4,13 +4,15 @@ from contrib import db
 from post import handler
 
 
-class GetSuite(unittest.TestCase):
+class PostSuite(unittest.TestCase):
     def setUp(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def tearDown(self):
         db.table('user').truncate()
+        db.table('userRole').truncate()
         db.table('userProperty').truncate()
 
     def test_post(self):

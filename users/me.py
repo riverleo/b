@@ -13,10 +13,7 @@ def handler(event, context):
     except:
         body = {}
 
-    try:
-        decoded = jwt_decode(authorization)
-    except:
-        decoded = {}
+    decoded = jwt_decode(authorization)
 
     keys = body.get('props') or split(query_params.get('props'))
     verbose = body.get('verbose') or boolean(query_params.get('verbose'))
