@@ -1,4 +1,4 @@
-from contrib import db, dumps, split
+from contrib import db, dumps, split, parse
 from orator.query.join_clause import JoinClause
 
 
@@ -28,7 +28,7 @@ def handler(event, context):
         )
 
     return {
-        'body': dumps({'data': sql.get()}),
+        'body': dumps({'data': list(map(lambda x: parse(x), sql.get()))}),
         'headers': {'Access-Control-Allow-Origin': '*'},
         'statusCode': 200,
     }

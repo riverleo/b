@@ -98,9 +98,14 @@ def parse_sql_error(err):
 
 
 def parse(raw):
+    contents = []
+
+    if raw.get('contents'):
+        contents = json.loads(raw.get('contents'))
+
     return {
         'id': raw.get('id'),
-        'contents': json.loads(raw.get('contents')),
+        'contents': contents,
         'createdAt': raw.get('createdAt'),
     }
 
