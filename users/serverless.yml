@@ -22,6 +22,20 @@ functions:
           method: post
           path: /
           cors: true
+  get:
+    handler: get.handler
+    events:
+      - http:
+          method: get
+          path: /
+          cors: true
+  getWithId:
+    handler: get_with_id.handler
+    events:
+      - http:
+          method: get
+          path: /{id}
+          cors: true
   put:
     handler: put.handler
     events:

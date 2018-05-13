@@ -47,7 +47,7 @@ def handler(event, context):
         'body': json.dumps({
             'data': get(
                 user_id,
-                keys=[k for k in props.keys() if k not in ('password')],
+                keys=props.keys(),
                 verbose=verbose,
             ),
         }),

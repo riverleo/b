@@ -41,7 +41,7 @@ def handler(event, context):
         'body': dumps({
             'data': get(
                 user_id,
-                keys=[k for k in props.keys() if k != 'password'],
+                keys=props.keys(),
                 verbose=verbose,
                 is_me=True,
             )

@@ -67,6 +67,8 @@ def set_props(user_id, props={}, unique=None):
 
 
 def get(user_id, keys=[], active=True, verbose=False, is_me=False):
+    keys = [k for k in keys if k != 'password']
+
     props = get_props(
         user_id,
         keys=keys,
@@ -79,10 +81,10 @@ def get(user_id, keys=[], active=True, verbose=False, is_me=False):
         'props': props,
     }
 
+    roles = db.table('userRole').where('userId', user_id).get()
+    user['roles'] = list(map(lambda r: r.get('type'), roles))
+
     if is_me:
         user['ssid'] = jwt_encode(user_id)
-
-        roles = db.table('userRole').where('userId', user_id).get()
-        user['roles'] = list(map(lambda r: r.get('type'), roles))
 
     return user

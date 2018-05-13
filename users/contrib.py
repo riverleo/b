@@ -127,10 +127,10 @@ def jwt_encode(user_id):
 
 
 def jwt_decode(raw):
-    token = raw
+    token = raw or ''
 
-    if raw.startswith('Bearer'):
-        token = raw[7:]
+    if token.startswith('Bearer'):
+        token = token[7:]
 
     try:
         return jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
