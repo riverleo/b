@@ -36,6 +36,10 @@ functions:
           method: get
           path: /{id}
           cors: true
+          request:
+            parameters:
+              paths:
+                id: true
   put:
     handler: put.handler
     events:

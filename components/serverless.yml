@@ -8,8 +8,10 @@ provider:
   name: aws
   stage: prod
   region: ap-northeast-2
-  runtime: nodejs6.10
+  runtime: nodejs8.10
   profile: workslow
+  environment:
+    NODE_ENV: prod
 
 functions:
   get:

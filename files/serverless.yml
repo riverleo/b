@@ -1,5 +1,5 @@
 service:
-  name: messages-api
+  name: files-api
 
 plugins:
   - serverless-webpack
@@ -10,15 +10,21 @@ provider:
   region: ap-northeast-2
   runtime: nodejs8.10
   profile: workslow
+  environment:
+    NODE_ENV: prod
 
 functions:
   get:
-    handler: get.default
+    handler: getWithId.default
     events:
       - http:
           method: get
-          path: /
+          path: /{id}
           cors: true
+          request:
+            parameters:
+              paths:
+                id: true
   post:
     handler: post.default
     events:
@@ -26,14 +32,3 @@ functions:
           method: post
           path: /
           cors: true
-  delete:
-    handler: delete.default
-    events:
-      - http:
-          method: delete
-          path: /{id}
-          cors: true
-          request:
-            parameters:
-              paths:
-                id: true

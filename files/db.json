@@ -1,0 +1,22 @@
+{
+  "test": {
+    "redis": "redis://127.0.0.1",
+    "mysql": {
+      "host": "localhost",
+      "user": "root",
+      "driver": "mysql",
+      "password": "mysql",
+      "database": "wslo"
+    }
+  },
+  "prod": {
+    "redis": "redis://13.125.216.161",
+    "mysql": {
+      "host": "13.125.216.161",
+      "user": "root",
+      "driver": "mysql",
+      "password": "smMX?[JfRxbifapdZJB3oJNT{ho@7KLsGr]XxChZREgoA6r6pL",
+      "database": "wslo"
+    }
+  }
+}

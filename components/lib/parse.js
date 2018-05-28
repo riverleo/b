@@ -1,8 +1,10 @@
 import _ from 'lodash';
 
-export const newError = (message, code) => {
+export const newError = (message, code, statusCode) => {
   const e = new Error(message);
+
   e.code = code;
+  e.statusCode = statusCode;
 
   return e;
 };

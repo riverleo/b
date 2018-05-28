@@ -13,5 +13,5 @@ functions:
     handler: handler.hello
     events:
       - http:
-          method: get
+          method: any
           path: /
