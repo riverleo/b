@@ -1,18 +1,25 @@
-import _ from 'lodash';
+const _ = require('lodash');
 
-export default ({
+module.exports = ({
   id,
+  name: _name,
+  type: _type,
+  bytes: _bytes,
   content,
   filename,
   contentType,
   attachableId,
   attachableType,
 }, isAllowNilValue, nullValue = null) => {
+  const name = _name || filename;
+  const type = _type || contentType;
+  const bytes = _bytes || content.byteLength;
+
   const parsed = {
     id,
-    name: !_.isNil(filename) ? filename : nullValue,
-    type: !_.isNil(contentType) ? contentType : nullValue,
-    bytes: !_.isNil(content) ? content.byteLength : nullValue,
+    name: !_.isNil(name) ? name : nullValue,
+    type: !_.isNil(type) ? type : nullValue,
+    bytes: !_.isNil(bytes) ? bytes : nullValue,
     attachableId: !_.isNil(attachableId) ? attachableId : nullValue,
     attachableType: !_.isNil(attachableType) ? attachableType : nullValue,
   };

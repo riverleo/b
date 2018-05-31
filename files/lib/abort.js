@@ -1,4 +1,4 @@
-export default (statusCode, message) => {
+module.exports = (statusCode, message) => {
   const e = new Error(message);
 
   e.statusCode = statusCode;

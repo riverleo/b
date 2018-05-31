@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   name: 'file',
   columns: {
     id: 'id',

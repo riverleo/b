@@ -1,7 +1,7 @@
-import _ from 'lodash';
+const _ = require('lodash');
 
 // https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
-const newId = (length = 11) => {
+module.exports = (length = 11) => {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -11,5 +11,3 @@ const newId = (length = 11) => {
 
   return text;
 };
-
-export default newId;

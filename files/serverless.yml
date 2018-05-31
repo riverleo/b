@@ -1,8 +1,8 @@
 service:
   name: files-api
 
-plugins:
-  - serverless-webpack
+excludes:
+  - bin/**
 
 provider:
   name: aws
@@ -15,7 +15,7 @@ provider:
 
 functions:
   get:
-    handler: getWithId.default
+    handler: getWithId.handler
     events:
       - http:
           method: get
@@ -26,7 +26,7 @@ functions:
               paths:
                 id: true
   post:
-    handler: post.default
+    handler: post.handler
     events:
       - http:
           method: post

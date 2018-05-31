@@ -1,13 +1,13 @@
-import _ from 'lodash';
-import AWS from 'aws-sdk';
-import Promise from 'bluebird';
-import { select, insert, in as $in } from 'sql-bricks';
-import newId from './lib/newId';
-import table from './lib/table';
-import parse from './lib/parse';
-import getConnection from './lib/getConnection';
-import parseFormData from './lib/parse/formData';
-import parseSQLError from './lib/parse/sqlError';
+const _ = require('lodash');
+const AWS = require('aws-sdk');
+const Promise = require('bluebird');
+const { select, insert, in: $in } = require('sql-bricks');
+const newId = require('./lib/newId');
+const table = require('./lib/table');
+const parse = require('./lib/parse');
+const parseError = require('./lib/parse/error');
+const { getConnection } = require('./lib/getConnection');
+const parseFormData = require('./lib/parse/formData');
 
 AWS.config.update({
   accessKeyId: 'AKIAIN3HLHS26Z4CLVUA',
@@ -15,7 +15,7 @@ AWS.config.update({
 });
 AWS.config.setPromisesDependency(Promise);
 
-export default async (e, context, callback) => {
+exports.handler = async (e, context, callback) => {
   const s3 = new AWS.S3();
   const conn = await getConnection();
   const files = _.values(parseFormData(e, true));
@@ -27,17 +27,18 @@ export default async (e, context, callback) => {
   try {
     const ids = await Promise.map(files, async (file) => {
       const id = newId(64);
+      const parsed = parse({ id, ..._.omit(file, ['type']) });
 
       await s3.putObject({
         Bucket: 'static.wslo.co',
         Key: `files/${id}`,
         Body: file.content,
         ACL: 'public-read',
-        ContentType: file.contentType,
-        ContentDisposition: `attachment; filename="${file.filename}"`,
+        ContentType: parsed.type,
+        ContentDisposition: `attachment; filename="${parsed.name}"`,
       }).promise();
 
-      await conn.query(insert(name, parse({ id, ...file })).toString());
+      await conn.query(insert(name, parsed).toString());
 
       return id;
     });
@@ -52,7 +53,7 @@ export default async (e, context, callback) => {
     };
   } catch (error) {
     response = {
-      body: JSON.stringify({ error: parseSQLError(error) }),
+      body: JSON.stringify({ error: parseError(error) }),
       headers,
       statusCode: error.statusCode || 400,
     };

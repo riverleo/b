@@ -7,7 +7,7 @@ const getValueIgnoringKeyCase = (obj, lookedKey) => {
     .filter(item => item)[0];
 }
 
-export default (event, spotText) => {
+module.exports = (event, spotText) => {
   const boundary = getValueIgnoringKeyCase(event.headers, 'Content-Type').split('=')[1];
   const body = (event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('binary') : event.body)
     .split(boundary)

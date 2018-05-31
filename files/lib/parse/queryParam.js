@@ -1,6 +1,6 @@
-import _ from 'lodash';
+const _ = require('lodash');
 
-export default raw => ({
+module.exports = raw => ({
   b: _.toNumber(_.get(raw, 'b')) || undefined, //                             blur   : Number (0...1)
   c: _.get(raw, 'c') ? _.toString(_.get(raw, 'c')) === 'true' : undefined, // crop   : Bool
   h: _.toNumber(_.get(raw, 'h')) || undefined, //                             height : Number
