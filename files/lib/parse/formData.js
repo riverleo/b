@@ -1,59 +1,61 @@
-/* eslint-disable */
-// https://github.com/myshenin/aws-lambda-multipart-parser/blob/master/index.js
+const _ = require('lodash');
+const abort = require('../abort');
+const newId = require('../newId');
 
-const getValueIgnoringKeyCase = (obj, lookedKey) => {
-  return Object.keys(obj)
-    .map(presentKey => presentKey.toLowerCase() === lookedKey.toLowerCase() ? obj[presentKey] : null)
-    .filter(item => item)[0];
-}
+const getValueIgnoreCase = (obj, lookedKey) => {
+  const key = _.find(_.keys(obj), k => _.toLower(k) === _.toLower(lookedKey));
 
-module.exports = (event, spotText) => {
-  const boundary = getValueIgnoringKeyCase(event.headers, 'Content-Type').split('=')[1];
-  const body = (event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('binary') : event.body)
-    .split(boundary)
-    .filter(item => item.match(/Content-Disposition/))
-    .map((item) => {
-      if (item.match(/filename/)) {
-        const result = {};
-        result[
-          item
-          .match(/name="[a-zA-Z_]+([a-zA-Z0-9_]*)"/)[0]
-          .split('=')[1]
-          .match(/[a-zA-Z_]+([a-zA-Z0-9_]*)/)[0]
-        ] = {
-          type: 'file',
-          filename: item
-          .match(/filename="[\w-\. ]+"/)[0]
-          .split('=')[1]
-          .match(/[\w-\.]+/)[0],
-          contentType: item
-          .match(/Content-Type: .+\r\n\r\n/)[0]
-          .replace(/Content-Type: /, '')
-          .replace(/\r\n\r\n/, ''),
-          content: (spotText && item
-            .match(/Content-Type: .+\r\n\r\n/)[0]
-            .replace(/Content-Type: /, '')
-            .replace(/\r\n\r\n/, '')
-            .match(/text/)
-          ) ? item
-          .split(/\r\n\r\n/)[1]
-          .replace(/\r\n\r\n\r\n----/, '') : Buffer.from(item
-            .split(/\r\n\r\n/)[1]
-            .replace(/\r\n\r\n\r\n----/, ''), 'binary'),
-        };
-        return result;
-      }
-      const result = {};
-      result[
-        item
-        .match(/name="[a-zA-Z_]+([a-zA-Z0-9_]*)"/)[0]
-        .split('=')[1]
-        .match(/[a-zA-Z_]+([a-zA-Z0-9_]*)/)[0]
-      ] = item
-        .split(/\r\n\r\n/)[1]
-        .split(/\r\n--/)[0];
-      return result;
-    })
-    .reduce((accumulator, current) => Object.assign(accumulator, current), {});
-  return body;
+  return obj[key];
+};
+
+module.exports = (e) => {
+  const boundary = _.split(getValueIgnoreCase(e.headers, 'Content-Type'), 'boundary=')[1];
+  const body = (e.isBase64Encoded ? Buffer.from(e.body, 'base64').toString('binary') : e.body);
+
+  if (_.isNil(boundary)) {
+    throw abort(500, 'invalid form');
+  }
+
+  const rawFormData = _.filter(_.split(body, boundary), r => _.includes(r, 'Content-Disposition: form-data'));
+
+  const result = {};
+
+  _.forEach(rawFormData, (raw) => {
+    let name, type, filename, contentType;
+
+    const nameExecuted = /name=\"([^\"]*)\"/.exec(raw);
+    const filenameExecuted = /filename=\"([^\"]*)\"/.exec(raw);
+    const contentTypeExecuted = /Content-Type: ([a-zA-Z0-9\/]*)/.exec(raw);
+    let content = _.split(_.split(raw, /\r\n\r\n/)[1], /\r\n--/)[0];
+
+    if (!_.isNil(nameExecuted) && !_.isEmpty(nameExecuted[1])) {
+      name = nameExecuted[1];
+    } else {
+      name = newId();
+    }
+
+    if (!_.isNil(filenameExecuted)) {
+      filename = filenameExecuted[1];
+    }
+
+    if (!_.isNil(contentTypeExecuted)) {
+      type = 'file';
+      content = Buffer.from(content, 'binary');
+    } else {
+      type = 'text';
+    }
+
+    if (!_.isNil(contentTypeExecuted)) {
+      contentType = contentTypeExecuted[1];
+    }
+
+    result[name] = {
+      type,
+      filename,
+      contentType,
+      content,
+    };
+  });
+
+  return result;
 };
