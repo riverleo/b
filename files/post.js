@@ -26,8 +26,11 @@ exports.handler = async (e, context, callback) => {
 
   try {
     const ids = await Promise.map(files, async (file) => {
+      if (file.type !== 'file') { return; }
+
       const id = newId(64);
       const parsed = parse({ id, ..._.omit(file, ['type']) });
+
 
       await s3.putObject({
         Bucket: 'static.wslo.co',
@@ -43,7 +46,7 @@ exports.handler = async (e, context, callback) => {
       return id;
     });
 
-    const sql = select().from(name).where($in(columns.id, ids));
+    const sql = select().from(name).where($in(columns.id, _.compact(ids)));
     const data = await conn.query(sql.toString());
 
     response = {

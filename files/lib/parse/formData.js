@@ -1,3 +1,5 @@
+/* global Buffer */
+
 const _ = require('lodash');
 const abort = require('../abort');
 const newId = require('../newId');
@@ -23,9 +25,9 @@ module.exports = (e) => {
   _.forEach(rawFormData, (raw) => {
     let name, type, filename, contentType;
 
-    const nameExecuted = /name=\"([^\"]*)\"/.exec(raw);
-    const filenameExecuted = /filename=\"([^\"]*)\"/.exec(raw);
-    const contentTypeExecuted = /Content-Type: ([a-zA-Z0-9\/]*)/.exec(raw);
+    const nameExecuted = /name="([^"]*)"/.exec(raw);
+    const filenameExecuted = /filename="([^"]*)"/.exec(raw);
+    const contentTypeExecuted = /Content-Type: ([a-zA-Z0-9-_/]*)/.exec(raw);
     let content = _.split(_.split(raw, /\r\n\r\n/)[1], /\r\n--/)[0];
 
     if (!_.isNil(nameExecuted) && !_.isEmpty(nameExecuted[1])) {
