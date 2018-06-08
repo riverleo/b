@@ -6,7 +6,10 @@ const is = require('./is');
  * Rotate the output image by either an explicit angle
  * or auto-orient based on the EXIF `Orientation` tag.
  *
- * Use this method without angle to determine the angle from EXIF data.
+ * If an angle is provided, it is converted to a valid 90/180/270deg rotation.
+ * For example, `-450` will produce a 270deg rotation.
+ *
+ * If no angle is provided, it is determined from the EXIF data.
  * Mirroring is supported and may infer the use of a flip operation.
  *
  * The use of `rotate` implies the removal of the EXIF `Orientation` tag, if any.
@@ -25,17 +28,17 @@ const is = require('./is');
  *   });
  * readableStream.pipe(pipeline);
  *
- * @param {Number} [angle=auto] 0, 90, 180 or 270.
+ * @param {Number} [angle=auto] angle of rotation, must be a multiple of 90.
  * @returns {Sharp}
  * @throws {Error} Invalid parameters
  */
 function rotate (angle) {
   if (!is.defined(angle)) {
-    this.options.angle = -1;
-  } else if (is.integer(angle) && is.inArray(angle, [0, 90, 180, 270])) {
+    this.options.useExifOrientation = true;
+  } else if (is.integer(angle) && !(angle % 90)) {
     this.options.angle = angle;
   } else {
-    throw new Error('Unsupported angle (0, 90, 180, 270) ' + angle);
+    throw new Error('Unsupported angle: angle must be a positive/negative multiple of 90 ' + angle);
   }
   return this;
 }
@@ -81,7 +84,7 @@ function extract (options) {
     }
   }, this);
   // Ensure existing rotation occurs before pre-resize extraction
-  if (suffix === 'Pre' && this.options.angle !== 0) {
+  if (suffix === 'Pre' && ((this.options.angle % 360) !== 0 || this.options.useExifOrientation === true)) {
     this.options.rotateBeforePreExtract = true;
   }
   return this;
@@ -149,6 +152,26 @@ function sharpen (sigma, flat, jagged) {
     }
   } else {
     throw new Error('Invalid sharpen sigma (0.01 - 10000) ' + sigma);
+  }
+  return this;
+}
+
+/**
+ * Apply median filter.
+ * When used without parameters the default window is 3x3.
+ * @param {Number} [size=3] square mask size: size x size
+ * @returns {Sharp}
+ * @throws {Error} Invalid parameters
+ */
+function median (size) {
+  if (!is.defined(size)) {
+    // No arguments: default to 3x3
+    this.options.medianSize = 3;
+  } else if (is.integer(size) && is.inRange(size, 1, 1000)) {
+    // Numeric argument: specific sigma
+    this.options.medianSize = size;
+  } else {
+    throw new Error('Invalid median size ' + size);
   }
   return this;
 }
@@ -329,7 +352,7 @@ function convolve (kernel) {
       !is.integer(kernel.width) || !is.integer(kernel.height) ||
       !is.inRange(kernel.width, 3, 1001) || !is.inRange(kernel.height, 3, 1001) ||
       kernel.height * kernel.width !== kernel.kernel.length
-     ) {
+  ) {
     // must pass in a kernel
     throw new Error('Invalid convolution kernel');
   }
@@ -404,6 +427,33 @@ function boolean (operand, operator, options) {
 }
 
 /**
+ * Apply the linear formula a * input + b to the image (levels adjustment)
+ * @param {Number} [a=1.0] multiplier
+ * @param {Number} [b=0.0] offset
+ * @returns {Sharp}
+ * @throws {Error} Invalid parameters
+ */
+function linear (a, b) {
+  if (!is.defined(a)) {
+    this.options.linearA = 1.0;
+  } else if (is.number(a)) {
+    this.options.linearA = a;
+  } else {
+    throw new Error('Invalid linear transform multiplier ' + a);
+  }
+
+  if (!is.defined(b)) {
+    this.options.linearB = 0.0;
+  } else if (is.number(b)) {
+    this.options.linearB = b;
+  } else {
+    throw new Error('Invalid linear transform offset ' + b);
+  }
+
+  return this;
+}
+
+/**
  * Decorate the Sharp prototype with operation-related functions.
  * @private
  */
@@ -414,6 +464,7 @@ module.exports = function (Sharp) {
     flip,
     flop,
     sharpen,
+    median,
     blur,
     extend,
     flatten,
@@ -424,7 +475,8 @@ module.exports = function (Sharp) {
     normalize,
     convolve,
     threshold,
-    boolean
+    boolean,
+    linear
   ].forEach(function (f) {
     Sharp.prototype[f.name] = f;
   });

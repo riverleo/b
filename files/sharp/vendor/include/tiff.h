@@ -1,4 +1,4 @@
-/* $Id: tiff.h,v 1.69 2014-04-02 17:23:06 fwarmerdam Exp $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

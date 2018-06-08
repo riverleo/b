@@ -31,13 +31,13 @@ module.exports = (e) => {
     let content = _.split(_.split(raw, /\r\n\r\n/)[1], /\r\n--/)[0];
 
     if (!_.isNil(nameExecuted) && !_.isEmpty(nameExecuted[1])) {
-      name = nameExecuted[1];
+      name = Buffer.from(nameExecuted[1], 'binary').toString('utf-8');
     } else {
       name = newId();
     }
 
     if (!_.isNil(filenameExecuted)) {
-      filename = filenameExecuted[1];
+      filename = Buffer.from(filenameExecuted[1], 'binary').toString('utf-8');
     }
 
     if (!_.isNil(contentTypeExecuted)) {

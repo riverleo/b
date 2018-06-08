@@ -57,7 +57,7 @@ exports.handler = async (e, context, callback) => {
   try {
     const sql = select().from(name).where(columns.id, id);
     const data = _.first(await conn.query(sql.toString()));
-    const parsed = parse(data, true);
+    const parsed = await parse(data, true);
 
     if (_.isNil(data)) {
       throw abort(404, 'not found');

@@ -1,6 +1,5 @@
 'use strict';
 
-const util = require('util');
 const is = require('./is');
 const sharp = require('../build/Release/sharp.node');
 
@@ -11,11 +10,23 @@ const sharp = require('../build/Release/sharp.node');
  * with JPEG, PNG, WebP, TIFF, DZI, and libvips' V format supported.
  * Note that raw pixel data is only supported for buffer output.
  *
- * A Promises/A+ promise is returned when `callback` is not provided.
+ * A `Promise` is returned when `callback` is not provided.
+ *
+ * @example
+ * sharp(input)
+ *   .toFile('output.png', (err, info) => { ... });
+ *
+ * @example
+ * sharp(input)
+ *   .toFile('output.png')
+ *   .then(info => { ... })
+ *   .catch(err => { ... });
  *
  * @param {String} fileOut - the path to write the image data to.
  * @param {Function} [callback] - called on completion with two arguments `(err, info)`.
- * `info` contains the output image `format`, `size` (bytes), `width`, `height` and `channels`.
+ * `info` contains the output image `format`, `size` (bytes), `width`, `height`,
+ * `channels` and `premultiplied` (indicating if premultiplication was used).
+ * When using a crop strategy also contains `cropOffsetLeft` and `cropOffsetTop`.
  * @returns {Promise<Object>} - when no callback is provided
  * @throws {Error} Invalid parameters
  */
@@ -45,14 +56,33 @@ function toFile (fileOut, callback) {
 
 /**
  * Write output to a Buffer.
- * JPEG, PNG, WebP, and RAW output are supported.
+ * JPEG, PNG, WebP, TIFF and RAW output are supported.
  * By default, the format will match the input image, except GIF and SVG input which become PNG output.
  *
  * `callback`, if present, gets three arguments `(err, data, info)` where:
  * - `err` is an error, if any.
  * - `data` is the output image data.
- * - `info` contains the output image `format`, `size` (bytes), `width`, `height` and `channels`.
- * A Promise is returned when `callback` is not provided.
+ * - `info` contains the output image `format`, `size` (bytes), `width`, `height`,
+ * `channels` and `premultiplied` (indicating if premultiplication was used).
+ * When using a crop strategy also contains `cropOffsetLeft` and `cropOffsetTop`.
+ *
+ * A `Promise` is returned when `callback` is not provided.
+ *
+ * @example
+ * sharp(input)
+ *   .toBuffer((err, data, info) => { ... });
+ *
+ * @example
+ * sharp(input)
+ *   .toBuffer()
+ *   .then(data => { ... })
+ *   .catch(err => { ... });
+ *
+ * @example
+ * sharp(input)
+ *   .toBuffer({ resolveWithObject: true })
+ *   .then(({ data, info }) => { ... })
+ *   .catch(err => { ... });
  *
  * @param {Object} [options]
  * @param {Boolean} [options.resolveWithObject] Resolve the Promise with an Object containing `data` and `info` properties instead of resolving only with `data`.
@@ -72,6 +102,13 @@ function toBuffer (options, callback) {
  * Include all metadata (EXIF, XMP, IPTC) from the input image in the output image.
  * The default behaviour, when `withMetadata` is not used, is to strip all metadata and convert to the device-independent sRGB colour space.
  * This will also convert to and add a web-friendly sRGB ICC profile.
+ *
+ * @example
+ * sharp('input.jpg')
+ *   .withMetadata()
+ *   .toFile('output-with-metadata.jpg')
+ *   .then(info => { ... });
+ *
  * @param {Object} [withMetadata]
  * @param {Number} [withMetadata.orientation] value between 1 and 8, used to update the EXIF `Orientation` tag.
  * @returns {Sharp}
@@ -93,6 +130,16 @@ function withMetadata (withMetadata) {
 
 /**
  * Use these JPEG options for output image.
+ *
+ * @example
+ * // Convert any input to very high quality JPEG output
+ * const data = await sharp(input)
+ *   .jpeg({
+ *     quality: 100,
+ *     chromaSubsampling: '4:4:4'
+ *   })
+ *   .toBuffer();
+ *
  * @param {Object} [options] - output options
  * @param {Number} [options.quality=80] - quality, integer 1-100
  * @param {Boolean} [options.progressive=false] - use progressive (interlace) scan
@@ -144,10 +191,20 @@ function jpeg (options) {
 
 /**
  * Use these PNG options for output image.
+ *
+ * PNG output is always full colour at 8 or 16 bits per pixel.
+ * Indexed PNG input at 1, 2 or 4 bits per pixel is converted to 8 bits per pixel.
+ *
+ * @example
+ * // Convert any input to PNG output
+ * const data = await sharp(input)
+ *   .png()
+ *   .toBuffer();
+ *
  * @param {Object} [options]
  * @param {Boolean} [options.progressive=false] - use progressive (interlace) scan
- * @param {Number} [options.compressionLevel=6] - zlib compression level
- * @param {Boolean} [options.adaptiveFiltering=true] - use adaptive row filtering
+ * @param {Number} [options.compressionLevel=9] - zlib compression level, 0-9
+ * @param {Boolean} [options.adaptiveFiltering=false] - use adaptive row filtering
  * @param {Boolean} [options.force=true] - force PNG output, otherwise attempt to use input format
  * @returns {Sharp}
  * @throws {Error} Invalid options
@@ -173,6 +230,13 @@ function png (options) {
 
 /**
  * Use these WebP options for output image.
+ *
+ * @example
+ * // Convert any input to lossless WebP output
+ * const data = await sharp(input)
+ *   .webp({ lossless: true })
+ *   .toBuffer();
+ *
  * @param {Object} [options] - output options
  * @param {Number} [options.quality=80] - quality, integer 1-100
  * @param {Number} [options.alphaQuality=100] - quality of alpha layer, integer 0-100
@@ -208,11 +272,25 @@ function webp (options) {
 
 /**
  * Use these TIFF options for output image.
+ *
+ * @example
+ * // Convert SVG input to LZW-compressed, 1 bit per pixel TIFF output
+ * sharp('input.svg')
+ *   .tiff({
+ *     compression: 'lzw',
+ *     squash: true
+ *   })
+ *   .toFile('1-bpp-output.tiff')
+ *   .then(info => { ... });
+ *
  * @param {Object} [options] - output options
  * @param {Number} [options.quality=80] - quality, integer 1-100
  * @param {Boolean} [options.force=true] - force TIFF output, otherwise attempt to use input format
- * @param {Boolean} [options.compression='jpeg'] - compression options: lzw, deflate, jpeg
- * @param {Boolean} [options.predictor='none'] - compression predictor options: none, horizontal, float
+ * @param {Boolean} [options.compression='jpeg'] - compression options: lzw, deflate, jpeg, ccittfax4
+ * @param {Boolean} [options.predictor='horizontal'] - compression predictor options: none, horizontal, float
+ * @param {Number} [options.xres=1.0] - horizontal resolution in pixels/mm
+ * @param {Number} [options.yres=1.0] - vertical resolution in pixels/mm
+ * @param {Boolean} [options.squash=false] - squash 8-bit images down to 1 bit
  * @returns {Sharp}
  * @throws {Error} Invalid options
  */
@@ -224,12 +302,34 @@ function tiff (options) {
       throw new Error('Invalid quality (integer, 1-100) ' + options.quality);
     }
   }
+  if (is.object(options) && is.defined(options.squash)) {
+    if (is.bool(options.squash)) {
+      this.options.tiffSquash = options.squash;
+    } else {
+      throw new Error('Invalid Value for squash ' + options.squash + ' Only Boolean Values allowed for options.squash.');
+    }
+  }
+  // resolution
+  if (is.object(options) && is.defined(options.xres)) {
+    if (is.number(options.xres)) {
+      this.options.tiffXres = options.xres;
+    } else {
+      throw new Error('Invalid Value for xres ' + options.xres + ' Only numeric values allowed for options.xres');
+    }
+  }
+  if (is.object(options) && is.defined(options.yres)) {
+    if (is.number(options.yres)) {
+      this.options.tiffYres = options.yres;
+    } else {
+      throw new Error('Invalid Value for yres ' + options.yres + ' Only numeric values allowed for options.yres');
+    }
+  }
   // compression
   if (is.defined(options) && is.defined(options.compression)) {
-    if (is.string(options.compression) && is.inArray(options.compression, ['lzw', 'deflate', 'jpeg', 'none'])) {
+    if (is.string(options.compression) && is.inArray(options.compression, ['lzw', 'deflate', 'jpeg', 'ccittfax4', 'none'])) {
       this.options.tiffCompression = options.compression;
     } else {
-      const message = `Invalid compression option "${options.compression}". Should be one of: lzw, deflate, jpeg, none`;
+      const message = `Invalid compression option "${options.compression}". Should be one of: lzw, deflate, jpeg, ccittfax4, none`;
       throw new Error(message);
     }
   }
@@ -247,6 +347,13 @@ function tiff (options) {
 
 /**
  * Force output to be raw, uncompressed uint8 pixel data.
+ *
+ * @example
+ * // Extract raw RGB pixel data from JPEG input
+ * const { data, info } = await sharp('input.jpg')
+ *   .raw()
+ *   .toBuffer({ resolveWithObject: true });
+ *
  * @returns {Sharp}
  */
 function raw () {
@@ -255,6 +362,13 @@ function raw () {
 
 /**
  * Force output to a given format.
+ *
+ * @example
+ * // Convert any input to PNG output
+ * const data = await sharp(input)
+ *   .toFormat('png')
+ *   .toBuffer();
+ *
  * @param {(String|Object)} format - as a String or an Object with an 'id' attribute
  * @param {Object} options - output options
  * @returns {Sharp}
@@ -264,6 +378,7 @@ function toFormat (format, options) {
   if (is.object(format) && is.string(format.id)) {
     format = format.id;
   }
+  if (format === 'jpg') format = 'jpeg';
   if (!is.inArray(format, ['jpeg', 'png', 'webp', 'tiff', 'raw'])) {
     throw new Error('Unsupported output format ' + format);
   }
@@ -274,6 +389,8 @@ function toFormat (format, options) {
  * Use tile-based deep zoom (image pyramid) output.
  * Set the format and options for tile images via the `toFormat`, `jpeg`, `png` or `webp` functions.
  * Use a `.zip` or `.szi` file extension with `toFile` to write to a compressed archive file format.
+ *
+ * Warning: multiple sharp instances concurrently producing tile output can expose a possible race condition in some versions of libgsf.
  *
  * @example
  *  sharp('input.tiff')
@@ -289,6 +406,7 @@ function toFormat (format, options) {
  * @param {Object} [tile]
  * @param {Number} [tile.size=256] tile size in pixels, a value between 1 and 8192.
  * @param {Number} [tile.overlap=0] tile overlap in pixels, a value between 0 and 8192.
+ * @param {Number} [tile.angle=0] tile angle of rotation, must be a multiple of 90.
  * @param {String} [tile.container='fs'] tile container, with value `fs` (filesystem) or `zip` (compressed file).
  * @param {String} [tile.layout='dz'] filesystem layout, possible values are `dz`, `zoomify` or `google`.
  * @returns {Sharp}
@@ -331,6 +449,15 @@ function tile (tile) {
         throw new Error('Invalid tile layout ' + tile.layout);
       }
     }
+
+    // Angle of rotation,
+    if (is.defined(tile.angle)) {
+      if (is.integer(tile.angle) && !(tile.angle % 90)) {
+        this.options.tileAngle = tile.angle;
+      } else {
+        throw new Error('Unsupported angle: angle must be a positive/negative multiple of 90 ' + tile.angle);
+      }
+    }
   }
   // Format
   if (is.inArray(this.options.formatOut, ['jpeg', 'png', 'webp'])) {
@@ -338,6 +465,7 @@ function tile (tile) {
   } else if (this.options.formatOut !== 'input') {
     throw new Error('Invalid tile format ' + this.options.formatOut);
   }
+
   return this._updateFormatOut('dz');
 }
 
@@ -482,66 +610,6 @@ function _pipeline (callback) {
   }
 }
 
-// Deprecated output options
-/* istanbul ignore next */
-const quality = util.deprecate(function (quality) {
-  const formatOut = this.options.formatOut;
-  const options = { quality: quality };
-  this.jpeg(options).webp(options).tiff(options);
-  this.options.formatOut = formatOut;
-  return this;
-}, 'quality: use jpeg({ quality: ... }), webp({ quality: ... }) and/or tiff({ quality: ... }) instead');
-/* istanbul ignore next */
-const progressive = util.deprecate(function (progressive) {
-  const formatOut = this.options.formatOut;
-  const options = { progressive: (progressive !== false) };
-  this.jpeg(options).png(options);
-  this.options.formatOut = formatOut;
-  return this;
-}, 'progressive: use jpeg({ progressive: ... }) and/or png({ progressive: ... }) instead');
-/* istanbul ignore next */
-const compressionLevel = util.deprecate(function (compressionLevel) {
-  const formatOut = this.options.formatOut;
-  this.png({ compressionLevel: compressionLevel });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'compressionLevel: use png({ compressionLevel: ... }) instead');
-/* istanbul ignore next */
-const withoutAdaptiveFiltering = util.deprecate(function (withoutAdaptiveFiltering) {
-  const formatOut = this.options.formatOut;
-  this.png({ adaptiveFiltering: (withoutAdaptiveFiltering === false) });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'withoutAdaptiveFiltering: use png({ adaptiveFiltering: ... }) instead');
-/* istanbul ignore next */
-const withoutChromaSubsampling = util.deprecate(function (withoutChromaSubsampling) {
-  const formatOut = this.options.formatOut;
-  this.jpeg({ chromaSubsampling: (withoutChromaSubsampling === false) ? '4:2:0' : '4:4:4' });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'withoutChromaSubsampling: use jpeg({ chromaSubsampling: "4:4:4" }) instead');
-/* istanbul ignore next */
-const trellisQuantisation = util.deprecate(function (trellisQuantisation) {
-  const formatOut = this.options.formatOut;
-  this.jpeg({ trellisQuantisation: (trellisQuantisation !== false) });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'trellisQuantisation: use jpeg({ trellisQuantisation: ... }) instead');
-/* istanbul ignore next */
-const overshootDeringing = util.deprecate(function (overshootDeringing) {
-  const formatOut = this.options.formatOut;
-  this.jpeg({ overshootDeringing: (overshootDeringing !== false) });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'overshootDeringing: use jpeg({ overshootDeringing: ... }) instead');
-/* istanbul ignore next */
-const optimiseScans = util.deprecate(function (optimiseScans) {
-  const formatOut = this.options.formatOut;
-  this.jpeg({ optimiseScans: (optimiseScans !== false) });
-  this.options.formatOut = formatOut;
-  return this;
-}, 'optimiseScans: use jpeg({ optimiseScans: ... }) instead');
-
 /**
  * Decorate the Sharp prototype with output-related functions.
  * @private
@@ -567,15 +635,4 @@ module.exports = function (Sharp) {
   ].forEach(function (f) {
     Sharp.prototype[f.name] = f;
   });
-  // Deprecated
-  Sharp.prototype.quality = quality;
-  Sharp.prototype.progressive = progressive;
-  Sharp.prototype.compressionLevel = compressionLevel;
-  Sharp.prototype.withoutAdaptiveFiltering = withoutAdaptiveFiltering;
-  Sharp.prototype.withoutChromaSubsampling = withoutChromaSubsampling;
-  Sharp.prototype.trellisQuantisation = trellisQuantisation;
-  Sharp.prototype.trellisQuantization = trellisQuantisation;
-  Sharp.prototype.overshootDeringing = overshootDeringing;
-  Sharp.prototype.optimiseScans = optimiseScans;
-  Sharp.prototype.optimizeScans = optimiseScans;
 };

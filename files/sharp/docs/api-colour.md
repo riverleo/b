@@ -2,11 +2,12 @@
 
 ### Table of Contents
 
--   [background](#background)
--   [greyscale](#greyscale)
--   [grayscale](#grayscale)
--   [toColourspace](#tocolourspace)
--   [toColorspace](#tocolorspace)
+-   [background][1]
+-   [tint][2]
+-   [greyscale][3]
+-   [grayscale][4]
+-   [toColourspace][5]
+-   [toColorspace][6]
 
 ## background
 
@@ -19,10 +20,24 @@ The alpha value is a float between `0` (transparent) and `1` (opaque).
 
 **Parameters**
 
--   `rgba` **([String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) \| [Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object))** parsed by the [color](https://www.npmjs.org/package/color) module to extract values for red, green, blue and alpha.
+-   `rgba` **([String][7] \| [Object][8])** parsed by the [color][9] module to extract values for red, green, blue and alpha.
 
 
--   Throws **[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)** Invalid parameter
+-   Throws **[Error][10]** Invalid parameter
+
+Returns **Sharp** 
+
+## tint
+
+Tint the image using the provided chroma while preserving the image luminance.
+An alpha channel may be present and will be unchanged by the operation.
+
+**Parameters**
+
+-   `rgb` **([String][7] \| [Object][8])** parsed by the [color][9] module to extract chroma values.
+
+
+-   Throws **[Error][10]** Invalid parameter
 
 Returns **Sharp** 
 
@@ -37,7 +52,7 @@ An alpha channel may be present, and will be unchanged by the operation.
 
 **Parameters**
 
--   `greyscale` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?**  (optional, default `true`)
+-   `greyscale` **[Boolean][11]**  (optional, default `true`)
 
 Returns **Sharp** 
 
@@ -47,7 +62,7 @@ Alternative spelling of `greyscale`.
 
 **Parameters**
 
--   `grayscale` **[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?**  (optional, default `true`)
+-   `grayscale` **[Boolean][11]**  (optional, default `true`)
 
 Returns **Sharp** 
 
@@ -58,10 +73,10 @@ By default output image will be web-friendly sRGB, with additional channels inte
 
 **Parameters**
 
--   `colourspace` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** output colourspace e.g. `srgb`, `rgb`, `cmyk`, `lab`, `b-w` [...](https://github.com/jcupitt/libvips/blob/master/libvips/iofuncs/enumtypes.c#L568)
+-   `colourspace` **[String][7]?** output colourspace e.g. `srgb`, `rgb`, `cmyk`, `lab`, `b-w` [...][12]
 
 
--   Throws **[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)** Invalid parameters
+-   Throws **[Error][10]** Invalid parameters
 
 Returns **Sharp** 
 
@@ -71,9 +86,33 @@ Alternative spelling of `toColourspace`.
 
 **Parameters**
 
--   `colorspace` **[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** output colorspace.
+-   `colorspace` **[String][7]?** output colorspace.
 
 
--   Throws **[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)** Invalid parameters
+-   Throws **[Error][10]** Invalid parameters
 
 Returns **Sharp** 
+
+[1]: #background
+
+[2]: #tint
+
+[3]: #greyscale
+
+[4]: #grayscale
+
+[5]: #tocolourspace
+
+[6]: #tocolorspace
+
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[9]: https://www.npmjs.org/package/color
+
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error
+
+[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[12]: https://github.com/jcupitt/libvips/blob/master/libvips/iofuncs/enumtypes.c#L568

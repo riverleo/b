@@ -29,8 +29,7 @@ exports.handler = async (e, context, callback) => {
       if (file.type !== 'file') { return; }
 
       const id = newId(64);
-      const parsed = parse({ id, ..._.omit(file, ['type']) });
-
+      const parsed = await parse({ id, ..._.omit(file, ['type']) });
 
       await s3.putObject({
         Bucket: 'static.wslo.co',
@@ -38,7 +37,7 @@ exports.handler = async (e, context, callback) => {
         Body: file.content,
         ACL: 'public-read',
         ContentType: parsed.type,
-        ContentDisposition: `attachment; filename="${parsed.name}"`,
+        ContentDisposition: `attachment; filename="${encodeURIComponent(parsed.name)}"`,
       }).promise();
 
       await conn.query(insert(name, parsed).toString());
@@ -48,6 +47,8 @@ exports.handler = async (e, context, callback) => {
 
     const sql = select().from(name).where($in(columns.id, _.compact(ids)));
     const data = await conn.query(sql.toString());
+
+    _.forEach(data, f => { f.meta = JSON.parse(f.meta); });
 
     response = {
       body: JSON.stringify({ data }),

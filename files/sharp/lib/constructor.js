@@ -5,7 +5,24 @@ const util = require('util');
 const stream = require('stream');
 const events = require('events');
 const semver = require('semver');
+const is = require('./is');
+const platform = require('./platform');
 const sharp = require('../build/Release/sharp.node');
+
+// Vendor platform
+(function () {
+  let vendorPlatformId;
+  try {
+    vendorPlatformId = require('../vendor/platform.json');
+  } catch (err) {
+    return;
+  }
+  const currentPlatformId = platform();
+  /* istanbul ignore if */
+  if (currentPlatformId !== vendorPlatformId) {
+    throw new Error(`'${vendorPlatformId}' binaries cannot be used on the '${currentPlatformId}' platform. Please remove the 'node_modules/sharp/vendor' directory and run 'npm rebuild'.`);
+  }
+})();
 
 // Versioning
 let versions = {
@@ -20,16 +37,19 @@ let versions = {
   }
   // Include versions of dependencies, if present
   try {
-    versions = require('../vendor/lib/versions.json');
+    versions = require('../vendor/versions.json');
   } catch (err) {}
 })();
+
+// Use NODE_DEBUG=sharp to enable libvips warnings
+const debuglog = util.debuglog('sharp');
 
 /**
  * @class Sharp
  *
  * Constructor factory to create an instance of `sharp`, to which further methods are chained.
  *
- * JPEG, PNG or WebP format image data can be streamed out from this object.
+ * JPEG, PNG, WebP or TIFF format image data can be streamed out from this object.
  * When using Stream based output, derived attributes are available from the `info` event.
  *
  * Implements the [stream.Duplex](http://nodejs.org/api/stream.html#stream_class_stream_duplex) class.
@@ -56,7 +76,7 @@ let versions = {
  *
  * @example
  * // Create a blank 300x200 PNG image of semi-transluent red pixels
- * sharp(null, {
+ * sharp({
  *   create: {
  *     width: 300,
  *     height: 200,
@@ -71,9 +91,13 @@ let versions = {
  * @param {(Buffer|String)} [input] - if present, can be
  *  a Buffer containing JPEG, PNG, WebP, GIF, SVG, TIFF or raw pixel image data, or
  *  a String containing the path to an JPEG, PNG, WebP, GIF, SVG or TIFF image file.
- *  JPEG, PNG, WebP, GIF, SVG, TIFF or raw pixel image data can be streamed into the object when null or undefined.
+ *  JPEG, PNG, WebP, GIF, SVG, TIFF or raw pixel image data can be streamed into the object when not present.
  * @param {Object} [options] - if present, is an Object with optional attributes.
+ * @param {Boolean} [options.failOnError=false] - by default apply a "best effort"
+ *  to decode images, even if the data is corrupt or invalid. Set this flag to true
+ *  if you'd rather halt processing and raise an error when loading invalid images.
  * @param {Number} [options.density=72] - integral number representing the DPI for vector images.
+ * @param {Number} [options.page=0] - page number to extract for multi-page input (GIF, TIFF)
  * @param {Object} [options.raw] - describes raw pixel input image data. See `raw()` for pixel ordering.
  * @param {Number} [options.raw.width]
  * @param {Number} [options.raw.height]
@@ -87,6 +111,9 @@ let versions = {
  * @throws {Error} Invalid parameters
  */
 const Sharp = function (input, options) {
+  if (arguments.length === 1 && !is.defined(input)) {
+    throw new Error('Invalid input');
+  }
   if (!(this instanceof Sharp)) {
     return new Sharp(input, options);
   }
@@ -94,7 +121,7 @@ const Sharp = function (input, options) {
   this.options = {
     // input options
     sequentialRead: false,
-    limitInputPixels: maximum.pixels,
+    limitInputPixels: Math.pow(0x3FFF, 2),
     // ICC profiles
     iccProfilePath: path.join(__dirname, 'icc') + path.sep,
     // resize options
@@ -110,6 +137,8 @@ const Sharp = function (input, options) {
     height: -1,
     canvas: 'crop',
     crop: 0,
+    embed: 0,
+    useExifOrientation: false,
     angle: 0,
     rotateBeforePreExtract: false,
     flip: false,
@@ -120,12 +149,14 @@ const Sharp = function (input, options) {
     extendRight: 0,
     withoutEnlargement: false,
     kernel: 'lanczos3',
-    interpolator: 'bicubic',
-    centreSampling: false,
+    fastShrinkOnLoad: true,
     // operations
     background: [0, 0, 0, 255],
+    tintA: 128,
+    tintB: 128,
     flatten: false,
     negate: false,
+    medianSize: 0,
     blurSigma: 0,
     sharpenSigma: 0,
     sharpenFlat: 1,
@@ -162,17 +193,24 @@ const Sharp = function (input, options) {
     jpegOvershootDeringing: false,
     jpegOptimiseScans: false,
     pngProgressive: false,
-    pngCompressionLevel: 6,
-    pngAdaptiveFiltering: true,
+    pngCompressionLevel: 9,
+    pngAdaptiveFiltering: false,
     webpQuality: 80,
     webpAlphaQuality: 100,
     webpLossless: false,
     webpNearLossless: false,
     tiffQuality: 80,
     tiffCompression: 'jpeg',
-    tiffPredictor: 'none',
+    tiffPredictor: 'horizontal',
+    tiffSquash: false,
+    tiffXres: 1.0,
+    tiffYres: 1.0,
     tileSize: 256,
     tileOverlap: 0,
+    linearA: 1,
+    linearB: 0,
+    // Function to notify of libvips warnings
+    debuglog: debuglog,
     // Function to notify of queue length changes
     queueListener: function (queueLength) {
       queue.emit('change', queueLength);
@@ -182,18 +220,6 @@ const Sharp = function (input, options) {
   return this;
 };
 util.inherits(Sharp, stream.Duplex);
-
-/**
- * Pixel limits.
- * @member
- * @private
- */
-const maximum = {
-  width: 0x3FFF,
-  height: 0x3FFF,
-  pixels: Math.pow(0x3FFF, 2)
-};
-Sharp.maximum = maximum;
 
 /**
  * An EventEmitter that emits a `change` event when a task is either:
@@ -211,7 +237,7 @@ Sharp.queue = queue;
 /**
  * An Object containing nested boolean values representing the available input and output formats/methods.
  * @example
- * console.log(sharp.format());
+ * console.log(sharp.format);
  * @returns {Object}
  */
 Sharp.format = sharp.format();

@@ -16,6 +16,8 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <queue>
+#include <mutex>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -38,7 +40,7 @@ namespace sharp {
 
   // Create an InputDescriptor instance from a v8::Object describing an input image
   InputDescriptor* CreateInputDescriptor(
-    v8::Handle<v8::Object> input, std::vector<v8::Local<v8::Object>> buffersToPersist
+    v8::Handle<v8::Object> input, std::vector<v8::Local<v8::Object>> &buffersToPersist
   ) {
     Nan::HandleScope();
     InputDescriptor *descriptor = new InputDescriptor;
@@ -50,6 +52,7 @@ namespace sharp {
       descriptor->buffer = node::Buffer::Data(buffer);
       buffersToPersist.push_back(buffer);
     }
+    descriptor->failOnError = AttrTo<bool>(input, "failOnError");
     // Density for vector-based input
     if (HasAttr(input, "density")) {
       descriptor->density = AttrTo<uint32_t>(input, "density");
@@ -59,6 +62,10 @@ namespace sharp {
       descriptor->rawChannels = AttrTo<uint32_t>(input, "rawChannels");
       descriptor->rawWidth = AttrTo<uint32_t>(input, "rawWidth");
       descriptor->rawHeight = AttrTo<uint32_t>(input, "rawHeight");
+    }
+    // Page input for multi-page TIFF
+    if (HasAttr(input, "page")) {
+      descriptor->page = AttrTo<uint32_t>(input, "page");
     }
     // Create new image
     if (HasAttr(input, "createChannels")) {
@@ -217,12 +224,17 @@ namespace sharp {
         imageType = DetermineImageType(descriptor->buffer, descriptor->bufferLength);
         if (imageType != ImageType::UNKNOWN) {
           try {
-            vips::VOption *option = VImage::option()->set("access", accessMethod);
+            vips::VOption *option = VImage::option()
+              ->set("access", accessMethod)
+              ->set("fail", descriptor->failOnError);
             if (imageType == ImageType::SVG || imageType == ImageType::PDF) {
               option->set("dpi", static_cast<double>(descriptor->density));
             }
             if (imageType == ImageType::MAGICK) {
               option->set("density", std::to_string(descriptor->density).data());
+            }
+            if (imageType == ImageType::TIFF) {
+             option->set("page", descriptor->page);
             }
             image = VImage::new_from_buffer(descriptor->buffer, descriptor->bufferLength, nullptr, option);
             if (imageType == ImageType::SVG || imageType == ImageType::PDF || imageType == ImageType::MAGICK) {
@@ -254,12 +266,17 @@ namespace sharp {
         imageType = DetermineImageType(descriptor->file.data());
         if (imageType != ImageType::UNKNOWN) {
           try {
-            vips::VOption *option = VImage::option()->set("access", accessMethod);
+            vips::VOption *option = VImage::option()
+              ->set("access", accessMethod)
+              ->set("fail", descriptor->failOnError);
             if (imageType == ImageType::SVG || imageType == ImageType::PDF) {
               option->set("dpi", static_cast<double>(descriptor->density));
             }
             if (imageType == ImageType::MAGICK) {
               option->set("density", std::to_string(descriptor->density).data());
+            }
+            if (imageType == ImageType::TIFF) {
+             option->set("page", descriptor->page);
             }
             image = VImage::new_from_file(descriptor->file.data(), option);
             if (imageType == ImageType::SVG || imageType == ImageType::PDF || imageType == ImageType::MAGICK) {
@@ -346,6 +363,25 @@ namespace sharp {
   }
 
   /*
+    Check the proposed format supports the current dimensions.
+  */
+  void AssertImageTypeDimensions(VImage image, ImageType const imageType) {
+    if (imageType == ImageType::JPEG) {
+      if (image.width() > 65535 || image.height() > 65535) {
+        throw vips::VError("Processed image is too large for the JPEG format");
+      }
+    } else if (imageType == ImageType::PNG) {
+      if (image.width() > 2147483647 || image.height() > 2147483647) {
+        throw vips::VError("Processed image is too large for the PNG format");
+      }
+    } else if (imageType == ImageType::WEBP) {
+      if (image.width() > 16383 || image.height() > 16383) {
+        throw vips::VError("Processed image is too large for the WebP format");
+      }
+    }
+  }
+
+  /*
     Called when a Buffer undergoes GC, required to support mixed runtime libraries in Windows
   */
   void FreeCallback(char* data, void* hint) {
@@ -355,8 +391,90 @@ namespace sharp {
   }
 
   /*
+    Temporary buffer of warnings
+  */
+  std::queue<std::string> vipsWarnings;
+  std::mutex vipsWarningsMutex;
+
+  /*
+    Called with warnings from the glib-registered "VIPS" domain
+  */
+  void VipsWarningCallback(char const* log_domain, GLogLevelFlags log_level, char const* message, void* ignore) {
+    std::lock_guard<std::mutex> lock(vipsWarningsMutex);
+    vipsWarnings.emplace(message);
+  }
+
+  /*
+    Pop the oldest warning message from the queue
+  */
+  std::string VipsWarningPop() {
+    std::string warning;
+    std::lock_guard<std::mutex> lock(vipsWarningsMutex);
+    if (!vipsWarnings.empty()) {
+      warning = vipsWarnings.front();
+      vipsWarnings.pop();
+    }
+    return warning;
+  }
+
+  /*
     Calculate the (left, top) coordinates of the output image
-    within the input image, applying the given gravity.
+    within the input image, applying the given gravity during an embed.
+
+    @Azurebyte: We are basically swapping the inWidth and outWidth, inHeight and outHeight from the CalculateCrop function.
+  */
+  std::tuple<int, int> CalculateEmbedPosition(int const inWidth, int const inHeight,
+    int const outWidth, int const outHeight, int const gravity) {
+
+    int left = 0;
+    int top = 0;
+    switch (gravity) {
+      case 1:
+        // North
+        left = (outWidth - inWidth) / 2;
+        break;
+      case 2:
+        // East
+        left = outWidth - inWidth;
+        top = (outHeight - inHeight) / 2;
+        break;
+      case 3:
+        // South
+        left = (outWidth - inWidth) / 2;
+        top = outHeight - inHeight;
+        break;
+      case 4:
+        // West
+        top = (outHeight - inHeight) / 2;
+        break;
+      case 5:
+        // Northeast
+        left = outWidth - inWidth;
+        break;
+      case 6:
+        // Southeast
+        left = outWidth - inWidth;
+        top = outHeight - inHeight;
+        break;
+      case 7:
+        // Southwest
+        top = outHeight - inHeight;
+        break;
+      case 8:
+        // Northwest
+        // Which is the default is 0,0 so we do not assign anything here.
+        break;
+      default:
+        // Centre
+        left = (outWidth - inWidth) / 2;
+        top = (outHeight - inHeight) / 2;
+    }
+    return std::make_tuple(left, top);
+  }
+
+  /*
+    Calculate the (left, top) coordinates of the output image
+    within the input image, applying the given gravity during a crop.
   */
   std::tuple<int, int> CalculateCrop(int const inWidth, int const inHeight,
     int const outWidth, int const outHeight, int const gravity) {
@@ -390,9 +508,11 @@ namespace sharp {
         // Southeast
         left = inWidth - outWidth;
         top = inHeight - outHeight;
+        break;
       case 7:
         // Southwest
         top = inHeight - outHeight;
+        break;
       case 8:
         // Northwest
         break;

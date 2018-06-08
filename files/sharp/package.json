@@ -1,26 +1,26 @@
 {
-  "_from": "sharp@^0.17.3",
-  "_id": "sharp@0.17.3",
+  "_from": "sharp@^0.20.3",
+  "_id": "sharp@0.20.3",
   "_inBundle": false,
-  "_integrity": "sha1-SEzSpwyQA3CUjcxD4WX3gwa/9Io=",
+  "_integrity": "sha512-9P6WclSW4GZg3I2ej3p/Xphsa2kl4b5pZaKMZXaFA5CRN91zzeJoZxLmXFUsjOY7ppIaMLXDOMs0zR2LYzjE/w==",
   "_location": "/sharp",
   "_phantomChildren": {},
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "sharp@^0.17.3",
+    "raw": "sharp@^0.20.3",
     "name": "sharp",
     "escapedName": "sharp",
-    "rawSpec": "^0.17.3",
+    "rawSpec": "^0.20.3",
     "saveSpec": null,
-    "fetchSpec": "^0.17.3"
+    "fetchSpec": "^0.20.3"
   },
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/sharp/-/sharp-0.17.3.tgz",
-  "_shasum": "484cd2a70c900370948dcc43e165f78306bff48a",
-  "_spec": "sharp@^0.17.3",
+  "_resolved": "https://registry.npmjs.org/sharp/-/sharp-0.20.3.tgz",
+  "_shasum": "315cbd44c36a0c403433a5d7b50bcbdf81b0ede0",
+  "_spec": "sharp@^0.20.3",
   "_where": "/build",
   "author": {
     "name": "Lovell Fuller",
@@ -33,12 +33,14 @@
   "cc": {
     "linelength": "120",
     "filter": [
+      "build/c++11",
       "build/include",
-      "runtime/indentation_namespace"
+      "runtime/indentation_namespace",
+      "runtime/references"
     ]
   },
   "config": {
-    "libvips": "8.4.2"
+    "libvips": "8.6.1"
   },
   "contributors": [
     {
@@ -160,36 +162,95 @@
     {
       "name": "Kristo Jorgenson",
       "email": "kristo.jorgenson@gmail.com"
+    },
+    {
+      "name": "YvesBos",
+      "email": "yves_bos@outlook.com"
+    },
+    {
+      "name": "Guy Maliar",
+      "email": "guy@tailorbrands.com"
+    },
+    {
+      "name": "Nicolas Coden",
+      "email": "nicolas@ncoden.fr"
+    },
+    {
+      "name": "Matt Parrish",
+      "email": "matt.r.parrish@gmail.com"
+    },
+    {
+      "name": "Marcel Bretschneider",
+      "email": "marcel.bretschneider@gmail.com"
+    },
+    {
+      "name": "Matthew McEachen",
+      "email": "matthew+github@mceachen.org"
+    },
+    {
+      "name": "Jarda Kotěšovec",
+      "email": "jarda.kotesovec@gmail.com"
+    },
+    {
+      "name": "Kenric D'Souza",
+      "email": "kenric.dsouza@gmail.com"
+    },
+    {
+      "name": "Oleh Aleinyk",
+      "email": "oleg.aleynik@gmail.com"
+    },
+    {
+      "name": "Marcel Bretschneider",
+      "email": "marcel.bretschneider@gmail.com"
+    },
+    {
+      "name": "Andrea Bianco",
+      "email": "andrea.bianco@unibas.ch"
+    },
+    {
+      "name": "Rik Heywood",
+      "email": "rik@rik.org"
+    },
+    {
+      "name": "Thomas Parisot",
+      "email": "hi@oncletom.io"
+    },
+    {
+      "name": "Nathan Graves",
+      "email": "nathanrgraves+github@gmail.com"
     }
   ],
   "dependencies": {
-    "caw": "^2.0.0",
-    "color": "^1.0.3",
-    "got": "^6.7.1",
-    "nan": "^2.5.1",
-    "semver": "^5.3.0",
-    "tar": "^2.2.1"
+    "color": "^3.0.0",
+    "detect-libc": "^1.0.3",
+    "fs-copy-file-sync": "^1.1.1",
+    "nan": "^2.10.0",
+    "npmlog": "^4.1.2",
+    "prebuild-install": "^4.0.0",
+    "semver": "^5.5.0",
+    "simple-get": "^2.8.1",
+    "tar": "^4.4.4",
+    "tunnel-agent": "^0.6.0"
   },
   "deprecated": false,
   "description": "High performance Node.js image processing, the fastest module to resize JPEG, PNG, WebP and TIFF images",
   "devDependencies": {
-    "async": "^2.2.0",
-    "bufferutil": "^3.0.0",
-    "cc": "^1.0.0",
-    "cross-env": "^4.0.0",
-    "documentation": "^4.0.0-beta.18",
+    "async": "^2.6.1",
+    "cc": "^1.0.2",
+    "decompress-zip": "^0.3.1",
+    "documentation": "^7.1.0",
     "exif-reader": "^1.0.2",
     "icc": "^1.0.0",
-    "mocha": "^3.2.0",
-    "nyc": "^10.2.0",
-    "rimraf": "^2.5.4",
-    "semistandard": "^10.0.0",
-    "unzip": "^0.1.11"
+    "mocha": "^5.2.0",
+    "nyc": "^11.8.0",
+    "prebuild": "^7.6.0",
+    "prebuild-ci": "^2.2.3",
+    "rimraf": "^2.6.2",
+    "semistandard": "^12.0.1"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=4.5.0"
   },
-  "gypfile": true,
   "homepage": "https://github.com/lovell/sharp",
   "keywords": [
     "jpeg",
@@ -203,6 +264,7 @@
     "resize",
     "thumbnail",
     "crop",
+    "embed",
     "libvips",
     "vips"
   ],
@@ -215,16 +277,16 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules/ build/ vendor/ coverage/ test/fixtures/output.*",
+    "coverage": "./test/coverage/report.sh",
     "docs": "for m in constructor input resize composite operation colour channel output utility; do documentation build --shallow --format=md lib/$m.js >docs/api-$m.md; done",
-    "install": "node-gyp rebuild",
-    "test": "semistandard && cc && cross-env VIPS_WARNING=0 nyc --reporter=lcov --branches=99 mocha --slow=5000 --timeout=60000 ./test/unit/*.js",
-    "test-leak": "./test/leak/leak.sh",
-    "test-packaging": "./packaging/test-linux-x64.sh"
+    "install": "(node install/libvips && node install/dll-copy && prebuild-install) || (node-gyp rebuild && node install/dll-copy)",
+    "test": "semistandard && cc && nyc --reporter=lcov --branches=99 mocha --slow=5000 --timeout=60000 ./test/unit/*.js && prebuild-ci",
+    "test-leak": "./test/leak/leak.sh"
   },
   "semistandard": {
     "env": [
       "mocha"
     ]
   },
-  "version": "0.17.3"
+  "version": "0.20.3"
 }

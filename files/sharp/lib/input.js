@@ -1,6 +1,5 @@
 'use strict';
 
-const util = require('util');
 const color = require('color');
 const is = require('./is');
 const sharp = require('../build/Release/sharp.node');
@@ -10,13 +9,16 @@ const sharp = require('../build/Release/sharp.node');
  * @private
  */
 function _createInputDescriptor (input, inputOptions, containerOptions) {
-  const inputDescriptor = {};
+  const inputDescriptor = { failOnError: false };
   if (is.string(input)) {
     // filesystem
     inputDescriptor.file = input;
   } else if (is.buffer(input)) {
     // Buffer
     inputDescriptor.buffer = input;
+  } else if (is.plainObject(input) && !is.defined(inputOptions)) {
+    // Plain Object descriptor, e.g. create
+    inputOptions = input;
   } else if (!is.defined(input) && is.object(containerOptions) && containerOptions.allowStream) {
     // Stream
     inputDescriptor.buffer = [];
@@ -24,6 +26,14 @@ function _createInputDescriptor (input, inputOptions, containerOptions) {
     throw new Error('Unsupported input ' + typeof input);
   }
   if (is.object(inputOptions)) {
+    // Fail on error
+    if (is.defined(inputOptions.failOnError)) {
+      if (is.bool(inputOptions.failOnError)) {
+        inputDescriptor.failOnError = inputOptions.failOnError;
+      } else {
+        throw new Error('Invalid failOnError (boolean) ' + inputOptions.failOnError);
+      }
+    }
     // Density
     if (is.defined(inputOptions.density)) {
       if (is.integer(inputOptions.density) && is.inRange(inputOptions.density, 1, 2400)) {
@@ -36,8 +46,8 @@ function _createInputDescriptor (input, inputOptions, containerOptions) {
     if (is.defined(inputOptions.raw)) {
       if (
         is.object(inputOptions.raw) &&
-        is.integer(inputOptions.raw.width) && is.inRange(inputOptions.raw.width, 1, this.constructor.maximum.width) &&
-        is.integer(inputOptions.raw.height) && is.inRange(inputOptions.raw.height, 1, this.constructor.maximum.height) &&
+        is.integer(inputOptions.raw.width) && inputOptions.raw.width > 0 &&
+        is.integer(inputOptions.raw.height) && inputOptions.raw.height > 0 &&
         is.integer(inputOptions.raw.channels) && is.inRange(inputOptions.raw.channels, 1, 4)
       ) {
         inputDescriptor.rawWidth = inputOptions.raw.width;
@@ -47,12 +57,18 @@ function _createInputDescriptor (input, inputOptions, containerOptions) {
         throw new Error('Expected width, height and channels for raw pixel input');
       }
     }
+    // Page input for multi-page TIFF
+    if (is.defined(inputOptions.page)) {
+      if (is.integer(inputOptions.page) && is.inRange(inputOptions.page, 0, 100000)) {
+        inputDescriptor.page = inputOptions.page;
+      }
+    }
     // Create new image
     if (is.defined(inputOptions.create)) {
       if (
         is.object(inputOptions.create) &&
-        is.integer(inputOptions.create.width) && is.inRange(inputOptions.create.width, 1, this.constructor.maximum.width) &&
-        is.integer(inputOptions.create.height) && is.inRange(inputOptions.create.height, 1, this.constructor.maximum.height) &&
+        is.integer(inputOptions.create.width) && inputOptions.create.width > 0 &&
+        is.integer(inputOptions.create.height) && inputOptions.create.height > 0 &&
         is.integer(inputOptions.create.channels) && is.inRange(inputOptions.create.channels, 3, 4) &&
         is.defined(inputOptions.create.background)
       ) {
@@ -143,32 +159,37 @@ function clone () {
   const that = this;
   // Clone existing options
   const clone = this.constructor.call();
-  util._extend(clone.options, this.options);
+  clone.options = Object.assign({}, this.options);
   // Pass 'finish' event to clone for Stream-based input
-  this.on('finish', function () {
-    // Clone inherits input data
-    that._flattenBufferIn();
-    clone.options.bufferIn = that.options.bufferIn;
-    clone.emit('finish');
-  });
+  if (this._isStreamInput()) {
+    this.on('finish', function () {
+      // Clone inherits input data
+      that._flattenBufferIn();
+      clone.options.bufferIn = that.options.bufferIn;
+      clone.emit('finish');
+    });
+  }
   return clone;
 }
 
 /**
- * Fast access to image metadata without decoding any compressed image data.
+ * Fast access to (uncached) image metadata without decoding any compressed image data.
  * A Promises/A+ promise is returned when `callback` is not provided.
  *
  * - `format`: Name of decoder used to decompress image data e.g. `jpeg`, `png`, `webp`, `gif`, `svg`
- * - `width`: Number of pixels wide
- * - `height`: Number of pixels high
- * - `space`: Name of colour space interpretation e.g. `srgb`, `rgb`, `cmyk`, `lab`, `b-w` [...](https://github.com/jcupitt/libvips/blob/master/libvips/iofuncs/enumtypes.c#L568)
+ * - `width`: Number of pixels wide (EXIF orientation is not taken into consideration)
+ * - `height`: Number of pixels high (EXIF orientation is not taken into consideration)
+ * - `space`: Name of colour space interpretation e.g. `srgb`, `rgb`, `cmyk`, `lab`, `b-w` [...](https://github.com/jcupitt/libvips/blob/master/libvips/iofuncs/enumtypes.c#L636)
  * - `channels`: Number of bands e.g. `3` for sRGB, `4` for CMYK
+ * - `depth`: Name of pixel depth format e.g. `uchar`, `char`, `ushort`, `float` [...](https://github.com/jcupitt/libvips/blob/master/libvips/iofuncs/enumtypes.c#L672)
  * - `density`: Number of pixels per inch (DPI), if present
  * - `hasProfile`: Boolean indicating the presence of an embedded ICC profile
  * - `hasAlpha`: Boolean indicating the presence of an alpha transparency channel
  * - `orientation`: Number value of the EXIF Orientation header, if present
  * - `exif`: Buffer containing raw EXIF data, if present
  * - `icc`: Buffer containing raw [ICC](https://www.npmjs.com/package/icc) profile data, if present
+ * - `iptc`: Buffer containing raw IPTC data, if present
+ * - `xmp`: Buffer containing raw XMP data, if present
  *
  * @example
  * const image = sharp(inputJpg);
@@ -228,6 +249,74 @@ function metadata (callback) {
 }
 
 /**
+ * Access to pixel-derived image statistics for every channel in the image.
+ * A Promise is returned when `callback` is not provided.
+ *
+ * - `channels`: Array of channel statistics for each channel in the image. Each channel statistic contains
+ *     - `min` (minimum value in the channel)
+ *     - `max` (maximum value in the channel)
+ *     - `sum` (sum of all values in a channel)
+ *     - `squaresSum` (sum of squared values in a channel)
+ *     - `mean` (mean of the values in a channel)
+ *     - `stdev` (standard deviation for the values in a channel)
+ *     - `minX` (x-coordinate of one of the pixel where the minimum lies)
+ *     - `minY` (y-coordinate of one of the pixel where the minimum lies)
+ *     - `maxX` (x-coordinate of one of the pixel where the maximum lies)
+ *     - `maxY` (y-coordinate of one of the pixel where the maximum lies)
+ * - `isOpaque`: Value to identify if the image is opaque or transparent, based on the presence and use of alpha channel
+ *
+ * @example
+ * const image = sharp(inputJpg);
+ * image
+ *   .stats()
+ *   .then(function(stats) {
+ *      // stats contains the channel-wise statistics array and the isOpaque value
+ *   });
+ *
+ * @param {Function} [callback] - called with the arguments `(err, stats)`
+ * @returns {Promise<Object>}
+ */
+function stats (callback) {
+  const that = this;
+  if (is.fn(callback)) {
+    if (this._isStreamInput()) {
+      this.on('finish', function () {
+        that._flattenBufferIn();
+        sharp.stats(that.options, callback);
+      });
+    } else {
+      sharp.stats(this.options, callback);
+    }
+    return this;
+  } else {
+    if (this._isStreamInput()) {
+      return new Promise(function (resolve, reject) {
+        that.on('finish', function () {
+          that._flattenBufferIn();
+          sharp.stats(that.options, function (err, stats) {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(stats);
+            }
+          });
+        });
+      });
+    } else {
+      return new Promise(function (resolve, reject) {
+        sharp.stats(that.options, function (err, stats) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(stats);
+          }
+        });
+      });
+    }
+  }
+}
+
+/**
  * Do not process input images where the number of pixels (width * height) exceeds this limit.
  * Assumes image dimensions contained in the input metadata can be trusted.
  * The default limit is 268402689 (0x3FFF * 0x3FFF) pixels.
@@ -240,12 +329,12 @@ function limitInputPixels (limit) {
   if (limit === false) {
     limit = 0;
   } else if (limit === true) {
-    limit = this.constructor.maximum.pixels;
+    limit = Math.pow(0x3FFF, 2);
   }
   if (is.integer(limit) && limit >= 0) {
     this.options.limitInputPixels = limit;
   } else {
-    throw new Error('Invalid pixel limit (0 to ' + this.constructor.maximum.pixels + ') ' + limit);
+    throw is.invalidParameterError('limitInputPixels', 'integer', limit);
   }
   return this;
 }
@@ -253,6 +342,9 @@ function limitInputPixels (limit) {
 /**
  * An advanced setting that switches the libvips access method to `VIPS_ACCESS_SEQUENTIAL`.
  * This will reduce memory usage and can improve performance on some systems.
+ *
+ * The default behaviour *before* function call is `false`, meaning the libvips access method is not sequential.
+ *
  * @param {Boolean} [sequentialRead=true]
  * @returns {Sharp}
  */
@@ -275,6 +367,7 @@ module.exports = function (Sharp) {
     // Public
     clone,
     metadata,
+    stats,
     limitInputPixels,
     sequentialRead
   ].forEach(function (f) {
